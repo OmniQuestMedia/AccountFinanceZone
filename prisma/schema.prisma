@@ -36,6 +36,7 @@ model PaymentMethodToken {
   tokenFingerprint  String
   residencyRegion   String   @default("CA")
   createdAt         DateTime @default(now())
+  transactions      Transaction[]
 
   @@index([accountId])
 }
@@ -54,7 +55,7 @@ model Transaction {
   sourceEventId     String?
   createdAt         DateTime        @default(now())
 
-  paymentToken      PaymentMethodToken @relation(fields: [paymentTokenId], references: [id])
+  paymentToken      PaymentMethodToken @relation(fields: [paymentTokenId], references: [id], onDelete: Restrict, onUpdate: Restrict)
 
   @@index([accountId, createdAt])
   @@index([ruleAppliedId])

@@ -15,7 +15,7 @@ describe('LedgerService', () => {
           auditTraceId: 'audit_1',
         },
       }),
-    ).toThrow('rule_applied_id is required');
+    ).toThrow('ruleAppliedId is required');
   });
 
   it('creates append-only entries for valid writes', () => {

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { FinancialWriteContext } from '../common/types';
 
 export interface LedgerEntryInput {
@@ -24,11 +25,11 @@ export class LedgerService {
 
   appendEntry(input: LedgerEntryInput): LedgerEntry {
     if (!input.context.ruleAppliedId?.trim()) {
-      throw new Error('rule_applied_id is required for all financial writes');
+      throw new Error('ruleAppliedId is required for all financial writes');
     }
 
     const entry: LedgerEntry = {
-      id: `le_${this.entries.length + 1}`,
+      id: `le_${randomUUID()}`,
       accountId: input.accountId,
       transactionId: input.transactionId,
       entryType: input.entryType,

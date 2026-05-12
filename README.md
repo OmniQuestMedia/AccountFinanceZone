@@ -1,6 +1,8 @@
 # AccountsFinanceZone
 
 AccountsFinanceZone is the **finance-only bounded context** for OmniQuest Media Inc. It is intentionally separated from AccountsZone identity/profile concerns.
+Repository slug: `AccountsFinanceZone`.
+Package name: `accounts-finance-zone`.
 
 ## Stack
 - TypeScript + Node.js + NestJS

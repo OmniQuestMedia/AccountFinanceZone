@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { ComplianceGuard } from '../compliance/compliance.guard';
 import { EventPublisher } from '../events/event.publisher';
 import { LedgerService } from '../ledger/ledger.service';
@@ -29,7 +30,7 @@ export class PayoutService {
       residencyRegion: 'CA',
     });
 
-    const payoutId = `po_${Date.now()}`;
+    const payoutId = `po_${randomUUID()}`;
 
     this.ledgerService.appendEntry({
       accountId: input.creatorAccountId,

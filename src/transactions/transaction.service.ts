@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { ComplianceGuard } from '../compliance/compliance.guard';
 import { EventPublisher } from '../events/event.publisher';
 import { FraudService } from '../fraud/fraud.service';
@@ -48,7 +49,7 @@ export class TransactionService {
       throw new Error('Payment blocked due to fraud risk');
     }
 
-    const transactionId = `txn_${Date.now()}`;
+    const transactionId = `txn_${randomUUID()}`;
 
     this.ledgerService.appendEntry({
       accountId: input.accountId,
