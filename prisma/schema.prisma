@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  PURCHASE
+  SUBSCRIPTION
+  ONE_TIME_PAYMENT
+  REFUND
+  CHARGEBACK
+  PAYOUT
+}
+
+enum LedgerEntryType {
+  CREDIT
+  DEBIT
+  OFFSET
+}
+
+enum FraudDecision {
+  ALLOW
+  REVIEW
+  BLOCK
+}
+
+model PaymentMethodToken {
+  id                String   @id @default(cuid())
+  accountId         String
+  provider          String
+  providerToken     String
+  tokenFingerprint  String
+  residencyRegion   String   @default("CA")
+  createdAt         DateTime @default(now())
+  transactions      Transaction[]
+
+  @@index([accountId])
+}
+
+model Transaction {
+  id                String          @id @default(cuid())
+  accountId         String
+  creatorAccountId  String?
+  type              TransactionType
+  amountMinor       BigInt
+  currency          String
+  paymentTokenId    String
+  status            String
+  riskScore         Int             @default(0)
+  ruleAppliedId     String
+  sourceEventId     String?
+  createdAt         DateTime        @default(now())
+
+  paymentToken      PaymentMethodToken @relation(fields: [paymentTokenId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([accountId, createdAt])
+  @@index([ruleAppliedId])
+}
+
+model LedgerEntry {
+  id                String          @id @default(cuid())
+  accountId         String
+  transactionId     String?
+  entryType         LedgerEntryType
+  amountMinor       BigInt
+  currency          String
+  ruleAppliedId     String
+  offsetOfEntryId   String?
+  auditTraceId      String
+  createdAt         DateTime        @default(now())
+
+  @@index([accountId, createdAt])
+  @@index([ruleAppliedId])
+  @@index([offsetOfEntryId])
+}
+
+model Payout {
+  id                String   @id @default(cuid())
+  creatorAccountId  String
+  amountMinor       BigInt
+  currency          String
+  revenueShareBps   Int
+  status            String
+  ruleAppliedId     String
+  createdAt         DateTime @default(now())
+
+  @@index([creatorAccountId, createdAt])
+  @@index([ruleAppliedId])
+}
+
+model FraudAssessment {
+  id                String        @id @default(cuid())
+  transactionId     String
+  riskScore         Int
+  decision          FraudDecision
+  flags             Json
+  ruleAppliedId     String
+  createdAt         DateTime      @default(now())
+
+  @@index([transactionId, createdAt])
+  @@index([ruleAppliedId])
+}
+
+model AuditTrail {
+  id                String   @id @default(cuid())
+  aggregateType     String
+  aggregateId       String
+  eventType         String
+  payload           Json
+  ruleAppliedId     String
+  actorType         String
+  createdAt         DateTime @default(now())
+
+  @@index([aggregateType, aggregateId, createdAt])
+  @@index([ruleAppliedId])
+}
