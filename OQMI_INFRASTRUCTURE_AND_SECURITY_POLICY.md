@@ -8,3 +8,6 @@ This repository implements and references OQMI infrastructure and security contr
 - Immutable audit logging for all financial actions.
 - PCI-DSS separation of duties: this service uses payment method tokens only and never stores raw PAN/CVV.
 - Ledger mutation policy: append-only writes with offset entries; no destructive updates/deletes.
+- Cross-repo event delivery must use approved webhook or NATS contracts; direct Cyrano service coupling is prohibited in this repository.
+- Webhook deliveries to eCommsZone must use the v1.1 contract envelope with HMAC signing when `ECOMMSZONE_WEBHOOK_SECRET` is configured.
+- Classic branch protection should require `ci`, `super-linter`, and `ship-gate` before merge.

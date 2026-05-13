@@ -1,7 +1,7 @@
-# AccountsFinanceZone
+# AccountFinanceZone
 
-AccountsFinanceZone is the **finance-only bounded context** for OmniQuest Media Inc. It is intentionally separated from AccountsZone identity/profile concerns.
-Repository slug: `AccountsFinanceZone`.
+AccountFinanceZone is the **finance-only bounded context** for OmniQuest Media Inc. It is intentionally separated from AccountsZone identity/profile concerns.
+Repository slug: `AccountFinanceZone`.
 Package name: `accounts-finance-zone`.
 
 ## Stack
@@ -14,11 +14,15 @@ Package name: `accounts-finance-zone`.
 ## Governance and Security Baseline
 - Full policy reference: [`OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md`](./OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md)
 - Governance reference: [`OQMI_GOVERNANCE.md`](./OQMI_GOVERNANCE.md)
+- Cleanup control lane: [`PROGRAM_CONTROL/WORK-ORDER-v0.9.8.md`](./PROGRAM_CONTROL/WORK-ORDER-v0.9.8.md)
+- Ship gate verifier: [`PROGRAM_CONTROL/ship-gate-verifier.ts`](./PROGRAM_CONTROL/ship-gate-verifier.ts)
+- Webhook contract: [`WEBHOOK_CONTRACTS.md`](./WEBHOOK_CONTRACTS.md)
 - Append-only financial ledger (offset entries only; no destructive ledger mutation paths)
 - `rule_applied_id` required on every financial write
 - AI advisory-only; AI cannot compute payouts or mutate the ledger
 - Immutable audit trail model and compliance-first control points
 - Canadian data residency only
+- Cleanup mode rule applied on every change: `GOVERNANCE-EQ-v1`
 
 ## Domain Scope
 - Purchases, subscriptions, one-time payments
@@ -33,7 +37,7 @@ Package name: `accounts-finance-zone`.
 AccountsZone events (tier change, entitlement)
               |
               v
-      AccountsFinanceZone
+      AccountFinanceZone
   (transactions, billing, payouts,
    ledger, fraud, compliance)
         |               \
@@ -69,7 +73,19 @@ npm install
 npm run lint
 npm test
 npm run build
+npm run ship-gate
 ```
+
+## Fast Path and Ship-Gate
+- Required classic branch protection checks: `ci`, `super-linter`, and `ship-gate`
+- Non-financial cleanup PRs stay on the fast path when ship-gate reports no human review requirement
+- Human review is reserved for `src/ledger/**` and `prisma/**`
+- Direct Cyrano integration is not allowed in this repository; cross-repo delivery must use the v1.1 webhook contract
+
+## eCommsZone Delivery
+- Finance events are published locally and can be forwarded to eCommsZone with `ECOMMSZONE_WEBHOOK_URL`
+- Optional HMAC signing is enabled with `ECOMMSZONE_WEBHOOK_SECRET`
+- Contract details are documented in [`WEBHOOK_CONTRACTS.md`](./WEBHOOK_CONTRACTS.md)
 
 ## Docker
 ```bash

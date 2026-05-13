@@ -1,0 +1,31 @@
+name: super-linter
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  super-linter:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Super-Linter
+        uses: github/super-linter/slim@v7
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          FILTER_REGEX_INCLUDE: (.github/workflows/.*|.github/linters/.*|.*\.md|package\.json)
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: false
+          VALIDATE_JSCPD: false
+          VALIDATE_NATURAL_LANGUAGE: false
