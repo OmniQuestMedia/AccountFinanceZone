@@ -6,6 +6,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "ci": "npm run lint && npm test && npm run build",
+    "ship-gate": "ts-node PROGRAM_CONTROL/ship-gate-verifier.ts",
     "start": "node dist/main.js",
     "start:dev": "ts-node src/main.ts",
     "test": "jest",
