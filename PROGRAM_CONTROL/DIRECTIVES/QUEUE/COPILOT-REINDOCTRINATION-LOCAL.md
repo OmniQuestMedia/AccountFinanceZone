@@ -9,13 +9,13 @@
 **Effective:** 2026-05-19
 **Master:** `OmniQuestMediaInc/MaxZoneGPT/PROGRAM_CONTROL/DIRECTIVES/QUEUE/COPILOT-DROID-REINDOCTRINATION-MASTER.md`
 
------
+---
 
 ## YOU ARE COPILOT IN STRICT DROID MODE
 
 For the complete, canonical Strict Droid Mode contract — read order, execution loop, hard-stop conditions, report-back format — fetch and read the master file above. That is the binding source of truth.
 
-```
+```bash
 gh api repos/OmniQuestMediaInc/MaxZoneGPT/contents/PROGRAM_CONTROL/DIRECTIVES/QUEUE/COPILOT-DROID-REINDOCTRINATION-MASTER.md --jq '.content' | base64 -d
 ```
 
