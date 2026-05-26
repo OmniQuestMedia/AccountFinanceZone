@@ -35,12 +35,25 @@ export class AuditService {
     ruleAppliedId: string;
     actorType: string;
   }) {
-    const { aggregateType, aggregateId, eventType, payload, ruleAppliedId, actorType } = params;
+    const {
+      aggregateType,
+      aggregateId,
+      eventType,
+      payload,
+      ruleAppliedId,
+      actorType,
+    } = params;
 
     // Validate required fields
-    if (!aggregateType || !aggregateId || !eventType || !ruleAppliedId || !actorType) {
+    if (
+      !aggregateType ||
+      !aggregateId ||
+      !eventType ||
+      !ruleAppliedId ||
+      !actorType
+    ) {
       throw new Error(
-        'All audit fields are required: aggregateType, aggregateId, eventType, ruleAppliedId, actorType'
+        'All audit fields are required: aggregateType, aggregateId, eventType, ruleAppliedId, actorType',
       );
     }
 
@@ -63,7 +76,11 @@ export class AuditService {
    */
   async recordTransactionEvent(params: {
     transactionId: string;
-    eventType: 'TransactionCreated' | 'TransactionRefunded' | 'TransactionChargeback' | 'TransactionFailed';
+    eventType:
+      | 'TransactionCreated'
+      | 'TransactionRefunded'
+      | 'TransactionChargeback'
+      | 'TransactionFailed';
     payload: Record<string, any>;
     ruleAppliedId: string;
     actorType?: string;
@@ -170,7 +187,7 @@ export class AuditService {
       startDate?: Date;
       endDate?: Date;
       limit?: number;
-    }
+    },
   ) {
     const where: any = { ruleAppliedId };
 
@@ -208,7 +225,7 @@ export class AuditService {
       aggregateType?: string;
       eventType?: string;
       limit?: number;
-    }
+    },
   ) {
     const where: any = {
       createdAt: {

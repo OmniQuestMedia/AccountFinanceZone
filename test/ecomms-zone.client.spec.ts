@@ -87,7 +87,9 @@ describe('ECommsZoneClient', () => {
     expect(parsed.source).toBe('AccountFinanceZone');
     expect(parsed.ruleAppliedId).toBe('GOVERNANCE-EQ-v1');
     expect(parsed.event.type).toBe('RefundInitiated');
-    expect((request.headers as Record<string, string>)['x-oqmi-signature-sha256']).toBe(
+    expect(
+      (request.headers as Record<string, string>)['x-oqmi-signature-sha256'],
+    ).toBe(
       `sha256=${createHmac('sha256', 'shared-secret').update(body).digest('hex')}`,
     );
   });

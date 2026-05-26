@@ -54,17 +54,22 @@ export class PayoutService {
    * @returns Breakdown of creator share, platform share, and total
    * @throws Error if revenueShareBps is invalid (< 0 or > 10000)
    */
-  calculateRevenueShare(request: CalculateRevenueShareRequest): CalculateRevenueShareResult {
+  calculateRevenueShare(
+    request: CalculateRevenueShareRequest,
+  ): CalculateRevenueShareResult {
     if (request.revenueShareBps < 0 || request.revenueShareBps > 10000) {
       throw new Error('revenueShareBps must be between 0 and 10000 (0-100%)');
     }
 
     // Calculate creator share: amount * (bps / 10000)
     // Use BigInt arithmetic to avoid floating point precision issues
-    const creatorShareMinor = (request.transactionAmountMinor * BigInt(request.revenueShareBps)) / 10000n;
+    const creatorShareMinor =
+      (request.transactionAmountMinor * BigInt(request.revenueShareBps)) /
+      10000n;
 
     // Platform gets the remainder to ensure no rounding discrepancies
-    const platformShareMinor = request.transactionAmountMinor - creatorShareMinor;
+    const platformShareMinor =
+      request.transactionAmountMinor - creatorShareMinor;
 
     return {
       creatorShareMinor,
@@ -131,7 +136,9 @@ export class PayoutService {
    * This is used to track when payouts have been successfully processed.
    */
   settlePayout(payoutId: string): void {
-    const record = this.reconciliationRecords.find((r) => r.payoutId === payoutId);
+    const record = this.reconciliationRecords.find(
+      (r) => r.payoutId === payoutId,
+    );
 
     if (!record) {
       throw new Error(`Payout ${payoutId} not found in reconciliation records`);
@@ -161,7 +168,9 @@ export class PayoutService {
    * This is used to track when payouts could not be processed.
    */
   failPayout(payoutId: string, reason: string): void {
-    const record = this.reconciliationRecords.find((r) => r.payoutId === payoutId);
+    const record = this.reconciliationRecords.find(
+      (r) => r.payoutId === payoutId,
+    );
 
     if (!record) {
       throw new Error(`Payout ${payoutId} not found in reconciliation records`);
@@ -188,8 +197,12 @@ export class PayoutService {
    * Get all reconciliation records for a specific creator account.
    * Useful for auditing and reporting.
    */
-  getReconciliationRecordsForCreator(creatorAccountId: string): PayoutReconciliationRecord[] {
-    return this.reconciliationRecords.filter((r) => r.creatorAccountId === creatorAccountId);
+  getReconciliationRecordsForCreator(
+    creatorAccountId: string,
+  ): PayoutReconciliationRecord[] {
+    return this.reconciliationRecords.filter(
+      (r) => r.creatorAccountId === creatorAccountId,
+    );
   }
 
   /**

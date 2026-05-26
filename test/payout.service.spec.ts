@@ -91,7 +91,9 @@ describe('PayoutService', () => {
       expect(result.platformShareMinor).toBe(67n); // $0.67 (remainder)
       expect(result.totalMinor).toBe(100n);
       // Ensure no money is lost in rounding
-      expect(result.creatorShareMinor + result.platformShareMinor).toBe(result.totalMinor);
+      expect(result.creatorShareMinor + result.platformShareMinor).toBe(
+        result.totalMinor,
+      );
     });
 
     it('throws error for negative BPS', () => {
@@ -133,7 +135,9 @@ describe('PayoutService', () => {
           revenueShareBps: bps,
         });
 
-        expect(result.creatorShareMinor + result.platformShareMinor).toBe(amount);
+        expect(result.creatorShareMinor + result.platformShareMinor).toBe(
+          amount,
+        );
         expect(result.totalMinor).toBe(amount);
       });
     });
@@ -250,7 +254,8 @@ describe('PayoutService', () => {
 
       service.failPayout(payoutId, 'Insufficient funds');
 
-      const records = service.getReconciliationRecordsForCreator('creator_fail');
+      const records =
+        service.getReconciliationRecordsForCreator('creator_fail');
       expect(records[0].status).toBe('FAILED');
     });
 

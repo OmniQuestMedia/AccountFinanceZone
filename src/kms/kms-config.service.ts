@@ -24,13 +24,15 @@ export class KmsConfigService {
     // Load KMS configuration from environment
     this.region = process.env.AWS_REGION || 'ca-central-1';
     this.kmsKeyId = process.env.AWS_KMS_KEY_ID || '';
-    this.kmsKeyAlias = process.env.AWS_KMS_KEY_ALIAS || 'alias/accountfinancezone-encryption-key';
+    this.kmsKeyAlias =
+      process.env.AWS_KMS_KEY_ALIAS ||
+      'alias/accountfinancezone-encryption-key';
     this.encryptionEnabled = process.env.DB_ENCRYPTION_ENABLED === 'true';
 
     // Validate Canadian data residency
     if (this.region !== 'ca-central-1') {
       throw new Error(
-        `KMS key must be in ca-central-1 region for Canadian data residency. Got: ${this.region}`
+        `KMS key must be in ca-central-1 region for Canadian data residency. Got: ${this.region}`,
       );
     }
 
@@ -41,7 +43,7 @@ export class KmsConfigService {
 
     if (!this.kmsKeyId && process.env.NODE_ENV === 'production') {
       this.logger.warn(
-        'AWS_KMS_KEY_ID not configured. Encryption at rest may not be active in production!'
+        'AWS_KMS_KEY_ID not configured. Encryption at rest may not be active in production!',
       );
     }
   }
@@ -93,12 +95,14 @@ export class KmsConfigService {
     }
 
     if (this.region !== 'ca-central-1') {
-      errors.push('AWS_REGION must be ca-central-1 for Canadian data residency');
+      errors.push(
+        'AWS_REGION must be ca-central-1 for Canadian data residency',
+      );
     }
 
     if (errors.length > 0) {
       this.logger.error('KMS configuration validation failed:');
-      errors.forEach(error => this.logger.error(`  - ${error}`));
+      errors.forEach((error) => this.logger.error(`  - ${error}`));
       return false;
     }
 
