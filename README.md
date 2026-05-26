@@ -6,10 +6,11 @@ Package name: `accounts-finance-zone`.
 
 ## Stack
 - TypeScript + Node.js + NestJS
-- PostgreSQL + Prisma
-- Redis
+- PostgreSQL 16 + Prisma (with pgcrypto extension for encryption)
+- Redis 7
 - Jest
 - Docker
+- AWS KMS (encryption at rest)
 
 ## Governance and Security Baseline
 - Full policy reference: [`OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md`](./OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md)
@@ -69,12 +70,30 @@ src/
 
 ## Quick Start
 ```bash
+# Install dependencies
 npm install
+
+# Set up environment (copy and configure)
+cp .env.example .env
+
+# Run linting and tests
 npm run lint
 npm test
 npm run build
 npm run ship-gate
+
+# Start with Docker (includes PostgreSQL with encryption enabled)
+docker compose up --build
 ```
+
+## Environment Configuration
+Key environment variables (see `.env.example` for full list):
+- `DATABASE_URL` - PostgreSQL connection string
+- `AWS_REGION` - Must be `ca-central-1` for Canadian data residency
+- `AWS_KMS_KEY_ID` - ARN of dedicated KMS key for encryption
+- `AWS_KMS_KEY_ALIAS` - Key alias (e.g., `alias/accountfinancezone-encryption-key`)
+- `DB_ENCRYPTION_ENABLED` - Enable database encryption (required in production)
+- `DATA_RESIDENCY_REGION` - Data residency region (enforced: `ca-central-1`)
 
 ## Fast Path and Ship-Gate
 - Required classic branch protection checks: `ci`, `super-linter`, and `ship-gate`
