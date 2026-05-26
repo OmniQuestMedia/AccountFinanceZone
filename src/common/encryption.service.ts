@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { createCipheriv, createDecipheriv, randomBytes, createHash } from 'crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+  createHash,
+} from 'crypto';
 
 /**
  * EncryptionService provides field-level encryption for sensitive financial data.
@@ -29,7 +34,7 @@ export class EncryptionService {
     if (!masterKey) {
       throw new Error(
         'ENCRYPTION_MASTER_KEY environment variable not set. ' +
-        'This is required for data-at-rest encryption.'
+          'This is required for data-at-rest encryption.',
       );
     }
 
@@ -75,7 +80,9 @@ export class EncryptionService {
 
     const parts = encryptedData.split(':');
     if (parts.length !== 3) {
-      throw new Error('Invalid encrypted data format. Expected: iv:authTag:encryptedData');
+      throw new Error(
+        'Invalid encrypted data format. Expected: iv:authTag:encryptedData',
+      );
     }
 
     const [ivBase64, authTagBase64, encrypted] = parts;
@@ -118,7 +125,9 @@ export class EncryptionService {
       const decrypted = this.decrypt(encrypted);
 
       if (decrypted !== testData) {
-        throw new Error('Encryption validation failed: decrypted data does not match');
+        throw new Error(
+          'Encryption validation failed: decrypted data does not match',
+        );
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

@@ -10,7 +10,8 @@ describe('KmsConfigService', () => {
 
     // Set test environment
     process.env.AWS_REGION = 'ca-central-1';
-    process.env.AWS_KMS_KEY_ID = 'arn:aws:kms:ca-central-1:123456789012:key/test-key-id';
+    process.env.AWS_KMS_KEY_ID =
+      'arn:aws:kms:ca-central-1:123456789012:key/test-key-id';
     process.env.AWS_KMS_KEY_ALIAS = 'alias/accountfinancezone-test-key';
     process.env.DB_ENCRYPTION_ENABLED = 'true';
     process.env.NODE_ENV = 'test';
@@ -26,7 +27,9 @@ describe('KmsConfigService', () => {
   describe('initialization', () => {
     it('should initialize with correct configuration', () => {
       expect(service.getRegion()).toBe('ca-central-1');
-      expect(service.getKeyId()).toBe('arn:aws:kms:ca-central-1:123456789012:key/test-key-id');
+      expect(service.getKeyId()).toBe(
+        'arn:aws:kms:ca-central-1:123456789012:key/test-key-id',
+      );
       expect(service.getKeyAlias()).toBe('alias/accountfinancezone-test-key');
       expect(service.isEncryptionEnabled()).toBe(true);
     });
@@ -40,7 +43,7 @@ describe('KmsConfigService', () => {
     it('should throw error if region is not ca-central-1', () => {
       process.env.AWS_REGION = 'us-east-1';
       expect(() => new KmsConfigService()).toThrow(
-        'KMS key must be in ca-central-1 region for Canadian data residency'
+        'KMS key must be in ca-central-1 region for Canadian data residency',
       );
     });
   });
@@ -93,7 +96,8 @@ describe('KmsConfigService', () => {
     it('should pass validation with all required settings in production', () => {
       process.env.NODE_ENV = 'production';
       process.env.AWS_REGION = 'ca-central-1';
-      process.env.AWS_KMS_KEY_ID = 'arn:aws:kms:ca-central-1:123456789012:key/prod-key';
+      process.env.AWS_KMS_KEY_ID =
+        'arn:aws:kms:ca-central-1:123456789012:key/prod-key';
       process.env.DB_ENCRYPTION_ENABLED = 'true';
       const newService = new KmsConfigService();
       expect(newService.validateProductionReady()).toBe(true);
@@ -118,10 +122,10 @@ describe('KmsConfigService', () => {
     it('should only allow ca-central-1 region', () => {
       const invalidRegions = ['us-east-1', 'eu-west-1', 'ap-southeast-1'];
 
-      invalidRegions.forEach(region => {
+      invalidRegions.forEach((region) => {
         process.env.AWS_REGION = region;
         expect(() => new KmsConfigService()).toThrow(
-          `KMS key must be in ca-central-1 region for Canadian data residency. Got: ${region}`
+          `KMS key must be in ca-central-1 region for Canadian data residency. Got: ${region}`,
         );
       });
     });

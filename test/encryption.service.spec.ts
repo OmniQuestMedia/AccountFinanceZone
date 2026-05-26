@@ -5,7 +5,8 @@ describe('EncryptionService', () => {
   const originalEnv = process.env.ENCRYPTION_MASTER_KEY;
 
   beforeAll(() => {
-    process.env.ENCRYPTION_MASTER_KEY = 'test-master-key-for-development-only-min-32-chars';
+    process.env.ENCRYPTION_MASTER_KEY =
+      'test-master-key-for-development-only-min-32-chars';
   });
 
   afterAll(() => {
@@ -63,15 +64,21 @@ describe('EncryptionService', () => {
     });
 
     it('should throw error when encrypting empty string', () => {
-      expect(() => service.encrypt('')).toThrow('Cannot encrypt empty or null plaintext');
+      expect(() => service.encrypt('')).toThrow(
+        'Cannot encrypt empty or null plaintext',
+      );
     });
 
     it('should throw error when encrypting null', () => {
-      expect(() => service.encrypt(null as any)).toThrow('Cannot encrypt empty or null plaintext');
+      expect(() => service.encrypt(null as any)).toThrow(
+        'Cannot encrypt empty or null plaintext',
+      );
     });
 
     it('should throw error when decrypting invalid format', () => {
-      expect(() => service.decrypt('invalid-format')).toThrow('Invalid encrypted data format');
+      expect(() => service.decrypt('invalid-format')).toThrow(
+        'Invalid encrypted data format',
+      );
     });
 
     it('should throw error when decrypting tampered data', () => {
@@ -92,7 +99,7 @@ describe('EncryptionService', () => {
 
       // Modify the auth tag
       const authTag = Buffer.from(parts[1], 'base64');
-      authTag[0] = authTag[0] ^ 0xFF; // Flip bits in first byte
+      authTag[0] = authTag[0] ^ 0xff; // Flip bits in first byte
       parts[1] = authTag.toString('base64');
 
       const tampered = parts.join(':');
@@ -135,10 +142,13 @@ describe('EncryptionService', () => {
       delete process.env.ENCRYPTION_MASTER_KEY;
 
       const testService = new EncryptionService();
-      expect(() => testService.validateConfiguration()).toThrow('ENCRYPTION_MASTER_KEY environment variable not set');
+      expect(() => testService.validateConfiguration()).toThrow(
+        'ENCRYPTION_MASTER_KEY environment variable not set',
+      );
 
       // Restore for other tests
-      process.env.ENCRYPTION_MASTER_KEY = 'test-master-key-for-development-only-min-32-chars';
+      process.env.ENCRYPTION_MASTER_KEY =
+        'test-master-key-for-development-only-min-32-chars';
     });
   });
 

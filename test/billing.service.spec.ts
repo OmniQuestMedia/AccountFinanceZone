@@ -189,7 +189,9 @@ describe('BillingService', () => {
       expect(payoutId).toBeDefined();
 
       // Verify the payout was created with correct amount (50% of $100)
-      const records = payoutService.getReconciliationRecordsForCreator('creator_integration');
+      const records = payoutService.getReconciliationRecordsForCreator(
+        'creator_integration',
+      );
       expect(records).toHaveLength(1);
       expect(records[0].amountMinor).toBe(5000n); // $50.00 (50% of $100)
       expect(records[0].revenueShareBps).toBe(5000);
@@ -226,7 +228,8 @@ describe('BillingService', () => {
       expect(payout1).toBeDefined();
       expect(payout2).toBeDefined();
 
-      const records = payoutService.getReconciliationRecordsForCreator('creator_multi');
+      const records =
+        payoutService.getReconciliationRecordsForCreator('creator_multi');
       expect(records).toHaveLength(2);
 
       // First payout: 50% of $100 = $50
@@ -279,7 +282,8 @@ describe('BillingService', () => {
       expect(payoutId).toBeDefined();
 
       // Step 4: Verify payout details
-      const records = payoutService.getReconciliationRecordsForCreator('creator_e2e');
+      const records =
+        payoutService.getReconciliationRecordsForCreator('creator_e2e');
       expect(records).toHaveLength(1);
       expect(records[0].amountMinor).toBe(30000n); // $300.00 (60% of $500)
       expect(records[0].status).toBe('PENDING');
@@ -287,7 +291,8 @@ describe('BillingService', () => {
       // Step 5: Settle the payout
       payoutService.settlePayout(payoutId!);
 
-      const settledRecords = payoutService.getReconciliationRecordsForCreator('creator_e2e');
+      const settledRecords =
+        payoutService.getReconciliationRecordsForCreator('creator_e2e');
       expect(settledRecords[0].status).toBe('SETTLED');
       expect(settledRecords[0].settledAt).toBeDefined();
     });

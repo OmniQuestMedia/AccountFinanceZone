@@ -41,13 +41,21 @@ export class FraudService {
       flags.push('large_amount');
     }
 
-    if (input.cardCountry && input.accountCountry && input.cardCountry !== input.accountCountry) {
+    if (
+      input.cardCountry &&
+      input.accountCountry &&
+      input.cardCountry !== input.accountCountry
+    ) {
       riskScore += 25;
       flags.push('geo_mismatch');
     }
 
     const decision =
-      riskScore >= BLOCK_SCORE_THRESHOLD ? 'BLOCK' : riskScore >= REVIEW_SCORE_THRESHOLD ? 'REVIEW' : 'ALLOW';
+      riskScore >= BLOCK_SCORE_THRESHOLD
+        ? 'BLOCK'
+        : riskScore >= REVIEW_SCORE_THRESHOLD
+          ? 'REVIEW'
+          : 'ALLOW';
     return { riskScore, flags, decision };
   }
 }

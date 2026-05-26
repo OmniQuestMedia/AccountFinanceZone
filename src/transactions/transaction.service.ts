@@ -75,7 +75,11 @@ export class TransactionService {
     return transactionId;
   }
 
-  initiateRefund(transactionId: string, input: MoneyMovementRequest, offsetOfEntryId: string): string {
+  initiateRefund(
+    transactionId: string,
+    input: MoneyMovementRequest,
+    offsetOfEntryId: string,
+  ): string {
     this.complianceGuard.assertMoneyMovementAllowed({
       operation: 'REFUND',
       accountId: input.accountId,
@@ -104,7 +108,11 @@ export class TransactionService {
     return transactionId;
   }
 
-  registerChargeback(transactionId: string, input: MoneyMovementRequest, offsetOfEntryId: string): string {
+  registerChargeback(
+    transactionId: string,
+    input: MoneyMovementRequest,
+    offsetOfEntryId: string,
+  ): string {
     this.complianceGuard.assertMoneyMovementAllowed({
       operation: 'CHARGEBACK',
       accountId: input.accountId,

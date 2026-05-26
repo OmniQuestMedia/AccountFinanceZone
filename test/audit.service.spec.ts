@@ -66,7 +66,7 @@ describe('AuditService', () => {
           payload: {},
           ruleAppliedId: 'GOVERNANCE-EQ-v1',
           actorType: 'System',
-        })
+        }),
       ).rejects.toThrow('All audit fields are required');
     });
 
@@ -79,7 +79,7 @@ describe('AuditService', () => {
           payload: {},
           ruleAppliedId: '',
           actorType: 'System',
-        })
+        }),
       ).rejects.toThrow('All audit fields are required');
     });
   });
@@ -246,7 +246,7 @@ describe('AuditService', () => {
       await service.getAuditsByRule('GOVERNANCE-EQ-v1', { limit: 50 });
 
       expect(prisma.auditTrail.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 50 })
+        expect.objectContaining({ take: 50 }),
       );
     });
   });
@@ -283,7 +283,7 @@ describe('AuditService', () => {
           where: expect.objectContaining({
             aggregateType: 'Transaction',
           }),
-        })
+        }),
       );
     });
   });

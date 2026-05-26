@@ -41,7 +41,8 @@ export class ECommsZoneClient {
 
     const sharedSecret = process.env.ECOMMSZONE_WEBHOOK_SECRET?.trim();
     if (sharedSecret) {
-      headers['x-oqmi-signature-sha256'] = `sha256=${createHmac('sha256', sharedSecret).update(body).digest('hex')}`;
+      headers['x-oqmi-signature-sha256'] =
+        `sha256=${createHmac('sha256', sharedSecret).update(body).digest('hex')}`;
     }
 
     const controller = new AbortController();
@@ -56,11 +57,15 @@ export class ECommsZoneClient {
       });
 
       if (!response.ok) {
-        this.logger.warn(`eCommsZone webhook returned ${response.status} for ${event.type}`);
+        this.logger.warn(
+          `eCommsZone webhook returned ${response.status} for ${event.type}`,
+        );
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`Failed to forward ${event.type} to eCommsZone: ${message}`);
+      this.logger.warn(
+        `Failed to forward ${event.type} to eCommsZone: ${message}`,
+      );
     } finally {
       clearTimeout(timeout);
     }
