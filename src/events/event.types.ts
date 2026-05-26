@@ -1,6 +1,8 @@
 export type FinanceEventType =
   | 'PaymentProcessed'
   | 'PayoutIssued'
+  | 'PayoutSettled'
+  | 'PayoutFailed'
   | 'RefundInitiated'
   | 'ChargebackRegistered'
   | 'FraudFlagRaised';
