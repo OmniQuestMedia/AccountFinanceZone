@@ -2,6 +2,7 @@ import { AuditService } from '../src/common/audit.service';
 
 describe('AuditService', () => {
   let service: AuditService;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let prisma: any;
 
   const mockAuditTrail = {

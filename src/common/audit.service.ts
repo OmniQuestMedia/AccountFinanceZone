@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 /**
  * Comprehensive audit service for financial operations.
@@ -31,7 +32,7 @@ export class AuditService {
     aggregateType: string;
     aggregateId: string;
     eventType: string;
-    payload: Record<string, any>;
+    payload: Prisma.JsonObject;
     ruleAppliedId: string;
     actorType: string;
   }) {
@@ -81,7 +82,7 @@ export class AuditService {
       | 'TransactionRefunded'
       | 'TransactionChargeback'
       | 'TransactionFailed';
-    payload: Record<string, any>;
+    payload: Prisma.JsonObject;
     ruleAppliedId: string;
     actorType?: string;
   }) {
@@ -101,7 +102,7 @@ export class AuditService {
   async recordLedgerEvent(params: {
     entryId: string;
     eventType: 'LedgerEntryCreated' | 'LedgerEntryOffset';
-    payload: Record<string, any>;
+    payload: Prisma.JsonObject;
     ruleAppliedId: string;
     actorType?: string;
   }) {
@@ -121,7 +122,7 @@ export class AuditService {
   async recordPayoutEvent(params: {
     payoutId: string;
     eventType: 'PayoutCreated' | 'PayoutIssued' | 'PayoutFailed';
-    payload: Record<string, any>;
+    payload: Prisma.JsonObject;
     ruleAppliedId: string;
     actorType?: string;
   }) {
@@ -141,7 +142,7 @@ export class AuditService {
   async recordFraudEvent(params: {
     assessmentId: string;
     eventType: 'FraudAssessmentCreated' | 'FraudFlagRaised';
-    payload: Record<string, any>;
+    payload: Prisma.JsonObject;
     ruleAppliedId: string;
     actorType?: string;
   }) {
@@ -189,7 +190,7 @@ export class AuditService {
       limit?: number;
     },
   ) {
-    const where: any = { ruleAppliedId };
+    const where: Prisma.AuditTrailWhereInput = { ruleAppliedId };
 
     if (options?.startDate || options?.endDate) {
       where.createdAt = {};
@@ -227,7 +228,7 @@ export class AuditService {
       limit?: number;
     },
   ) {
-    const where: any = {
+    const where: Prisma.AuditTrailWhereInput = {
       createdAt: {
         gte: startDate,
         lte: endDate,

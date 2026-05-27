@@ -70,6 +70,7 @@ describe('EncryptionService', () => {
     });
 
     it('should throw error when encrypting null', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect(() => service.encrypt(null as any)).toThrow(
         'Cannot encrypt empty or null plaintext',
       );
