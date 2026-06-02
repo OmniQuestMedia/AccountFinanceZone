@@ -6,11 +6,14 @@ import { FraudModule } from './fraud/fraud.module';
 import { KmsModule } from './kms/kms.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { PayoutsModule } from './payouts/payouts.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { TheatreModule } from './theatre/theatre.module';
 import { TransactionsModule } from './transactions/transactions.module';
 
 @Module({
   imports: [
     KmsModule,
+    PrismaModule,
     TransactionsModule,
     BillingModule,
     PayoutsModule,
@@ -18,6 +21,7 @@ import { TransactionsModule } from './transactions/transactions.module';
     FraudModule,
     ComplianceModule,
     EventsModule,
+    TheatreModule,
   ],
 })
 export class AppModule {}

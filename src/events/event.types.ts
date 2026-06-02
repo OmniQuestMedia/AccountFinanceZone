@@ -5,7 +5,10 @@ export type FinanceEventType =
   | 'PayoutFailed'
   | 'RefundInitiated'
   | 'ChargebackRegistered'
-  | 'FraudFlagRaised';
+  | 'FraudFlagRaised'
+  | 'payout.requested'
+  | 'payout.settled'
+  | 'theatre.block.settled';
 
 export interface FinanceEvent<TPayload = Record<string, unknown>> {
   type: FinanceEventType;
