@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { LedgerService } from '../ledger/ledger.service';
 import { EventPublisher } from '../events/event.publisher';
+import { ComplianceService } from '../compliance/compliance.service';
 import { randomUUID } from 'crypto';
 
 const CREATOR_SHARE_BPS = 7000; // 70%
@@ -29,9 +30,14 @@ export class TheatrePayoutService {
     private readonly prisma: PrismaService,
     private readonly ledger: LedgerService,
     private readonly eventPublisher: EventPublisher,
+    private readonly compliance: ComplianceService,
   ) {}
 
   async createShow(input: CreateShowInput) {
+    if (!Number.isInteger(input.ticketPriceCents) || input.ticketPriceCents <= 0) {
+      throw new BadRequestException('ticketPriceCents must be a positive integer');
+    }
+
     return this.prisma.theatreShow.create({
       data: {
         creator_id: input.creatorId,
@@ -44,6 +50,10 @@ export class TheatrePayoutService {
   }
 
   async recordLingerEvent(input: RecordLingerEventInput) {
+    if (!Number.isInteger(input.viewerSeconds) || input.viewerSeconds <= 0) {
+      throw new BadRequestException('viewerSeconds must be a positive integer');
+    }
+
     const show = await this.prisma.theatreShow.findUnique({
       where: { id: input.showId },
     });
@@ -79,7 +89,11 @@ export class TheatrePayoutService {
       throw new NotFoundException(`TheatreShow ${showId} not found`);
     }
 
-    const totalRevenueCents = show.ticket_price_cents * show.tickets.length;
+    // Sum actual ticket prices to handle variable pricing scenarios
+    const totalRevenueCents = show.tickets.reduce(
+      (sum, t) => sum + t.price_cents,
+      0,
+    );
     const creatorPoolCents = Math.floor(
       (totalRevenueCents * CREATOR_SHARE_BPS) / 10000,
     );
@@ -110,15 +124,19 @@ export class TheatrePayoutService {
   }
 
   async settleBlockPayout(showId: string) {
-    const show = await this.prisma.theatreShow.findUnique({
-      where: { id: showId },
+    // Atomically advance status ACTIVE -> SETTLING to prevent concurrency double-pay
+    const updated = await this.prisma.theatreShow.updateMany({
+      where: { id: showId, status: 'ACTIVE' },
+      data: { status: 'SETTLING' },
     });
 
-    if (!show) {
-      throw new NotFoundException(`TheatreShow ${showId} not found`);
-    }
-
-    if (show.status !== 'ACTIVE') {
+    if (updated.count === 0) {
+      const show = await this.prisma.theatreShow.findUnique({
+        where: { id: showId },
+      });
+      if (!show) {
+        throw new NotFoundException(`TheatreShow ${showId} not found`);
+      }
       throw new BadRequestException(
         `Show ${showId} is not in ACTIVE status - already settled?`,
       );
@@ -131,6 +149,20 @@ export class TheatrePayoutService {
 
     for (const [creatorId, amountCents] of payouts.entries()) {
       if (amountCents <= 0) continue;
+
+      const complianceDecision = this.compliance.evaluate({
+        operation: 'PAYOUT',
+        accountId: creatorId,
+        amountMinor: BigInt(amountCents),
+        currency: 'CAD',
+        residencyRegion: 'CA',
+      });
+
+      if (!complianceDecision.approved) {
+        throw new BadRequestException(
+          `Compliance check failed for creator ${creatorId}: ${complianceDecision.reason}`,
+        );
+      }
 
       const entry = this.ledger.appendEntry({
         accountId: creatorId,

@@ -12,19 +12,19 @@
 
 | Method | Path                    | Auth        | Description                                                                                                                                         |
 | ------ | ----------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| POST   | `/payouts/preference`   | Creator JWT | Set or update the authenticated creator's payout preference. Sensitive bank/wire fields are KMS-encrypted before storage.                           |
-| GET    | `/payouts/preference`   | Creator JWT | Retrieve the authenticated creator's current payout preference. Sensitive fields are decrypted on read.                                             |
-| POST   | `/payouts/request`      | Creator JWT | Submit a payout request. Validates minimum threshold ($50), no active holds, sufficient escrow balance. Creates append-only `PayoutRequest` record. |
-| GET    | `/payouts/requests`     | Creator JWT | List all payout requests for the authenticated creator.                                                                                             |
-| GET    | `/payouts/requests/:id` | Creator JWT | Get status of a single payout request.                                                                                                              |
+| POST   | `/payouts/preference`   | x-creator-id header (set by API gateway) | Set or update the authenticated creator's payout preference. Sensitive bank/wire fields are AES-256-GCM encrypted (ENCRYPTION_MASTER_KEY) before storage. |
+| GET    | `/payouts/preference`   | x-creator-id header (set by API gateway) | Retrieve the authenticated creator's current payout preference. Sensitive fields are decrypted on read.                                             |
+| POST   | `/payouts/request`      | x-creator-id header (set by API gateway) | Submit a payout request. Validates minimum threshold ($50) and no active holds. Creates append-only `PayoutRequest` record. |
+| GET    | `/payouts/requests`     | x-creator-id header (set by API gateway) | List all payout requests for the authenticated creator.                                                                                             |
+| GET    | `/payouts/requests/:id` | x-creator-id header (set by API gateway) | Get status of a single payout request.                                                                                                              |
 
 ### Theatre / Linger
 
 | Method | Path                                | Auth            | Description                                                                                           |
 | ------ | ----------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------- |
-| POST   | `/theatre/shows`                    | Creator JWT     | Create a new theatre show block.                                                                      |
+| POST   | `/theatre/shows`                    | x-creator-id header (set by API gateway) | Create a new theatre show block.                                                                      |
 | POST   | `/theatre/shows/:id/linger`         | System/Internal | Record a viewer linger event (viewer-seconds in show block). Append-only.                             |
-| POST   | `/theatre/shows/:id/settle`         | Admin/System    | Settle the show block: calculate per-creator payouts and append ledger entries. Marks show `SETTLED`. |
+| POST   | `/theatre/shows/:id/settle`         | Admin/System (internal)    | Settle the show block: calculate per-creator payouts and append ledger entries. Marks show `SETTLED`. |
 | GET    | `/theatre/shows/:id/payout-preview` | Creator/Admin   | Preview payout distribution before settlement. Read-only.                                             |
 
 ---
@@ -74,6 +74,7 @@ All events are delivered to eCommsZone via the v1.1 webhook contract (`ECOMMSZON
 | `ECOMMSZONE_WEBHOOK_URL`    | Yes                  | eCommsZone webhook delivery endpoint                           |
 | `ECOMMSZONE_WEBHOOK_SECRET` | No                   | HMAC-SHA256 signing secret for webhook delivery                |
 | `NOWPAYMENTS_API_KEY`       | Yes (crypto payouts) | NOWPayments API key for CRYPTO_NOWPAYMENTS settlements         |
+| `ENCRYPTION_MASTER_KEY`     | Yes                  | 32-byte hex key for AES-256-GCM encryption of sensitive payout preference fields |
 | `NODE_ENV`                  | Yes                  | `development` or `production`                                  |
 | `PORT`                      | No                   | HTTP listen port (default: 3000)                               |
 
@@ -96,7 +97,7 @@ All events are delivered to eCommsZone via the v1.1 webhook contract (`ECOMMSZON
 | `payment_method_tokens`      | `PaymentMethodToken`      | **Yes**     | Vault token references only - no raw PAN/CVV.                             |
 | `creator_payout_preferences` | `CreatorPayoutPreference` | No          | Mutable preference record per creator (one row, updated).                 |
 
-> **Invariant:** All tables in the "Append-Only: Yes" column must never have `UPDATE` or `DELETE` statements executed against them. Corrections are modeled as new offset/reversal rows with a reference to the original entry.
+> **Invariant:** All tables in the "Append-Only: Yes" column must never have `UPDATE` or `DELETE` statements executed against financial data rows. Status and lifecycle fields (`status`, `block_end_at`) may advance forward-only via monotonic state transitions (e.g. PENDING → PROCESSING → SETTLED). Financial corrections are modeled as new OFFSET/reversal rows referencing the original entry — never as updates to existing rows.
 
 ---
 

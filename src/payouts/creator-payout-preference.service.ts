@@ -1,7 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { EncryptionService } from '../common/encryption.service';
 import { randomUUID } from 'crypto';
+
+const VALID_PAYOUT_METHODS = new Set([
+  'DIRECT_DEPOSIT',
+  'E_TRANSFER',
+  'WIRE_TRANSFER',
+  'CHECK_BY_MAIL',
+  'CRYPTO_NOWPAYMENTS',
+]);
 
 export interface SetPayoutPreferenceInput {
   creatorId: string;
@@ -21,6 +30,12 @@ export class CreatorPayoutPreferenceService {
   ) {}
 
   async upsert(input: SetPayoutPreferenceInput) {
+    if (!VALID_PAYOUT_METHODS.has(input.preferredMethod)) {
+      throw new BadRequestException(
+        `Invalid preferredMethod: ${input.preferredMethod}`,
+      );
+    }
+
     const directDepositEncrypted = input.directDepositDetails
       ? this.encryption.encrypt(JSON.stringify(input.directDepositDetails))
       : null;
@@ -47,9 +62,9 @@ export class CreatorPayoutPreferenceService {
         direct_deposit_details: directDepositEncrypted
           ? { encrypted: directDepositEncrypted }
           : undefined,
-        etransfer_email: input.etransferEmail,
+        etransfer_email: input.etransferEmail ?? null,
         wire_details: wireEncrypted ? { encrypted: wireEncrypted } : undefined,
-        crypto_wallet_address: input.cryptoWalletAddress,
+        crypto_wallet_address: input.cryptoWalletAddress ?? null,
         mailing_address: mailingEncrypted
           ? { encrypted: mailingEncrypted }
           : undefined,
@@ -57,15 +72,16 @@ export class CreatorPayoutPreferenceService {
       },
       update: {
         preferred_method: input.preferredMethod as never,
+        // Explicitly null-out fields not provided so stale encrypted values are cleared
         direct_deposit_details: directDepositEncrypted
           ? { encrypted: directDepositEncrypted }
-          : undefined,
-        etransfer_email: input.etransferEmail,
-        wire_details: wireEncrypted ? { encrypted: wireEncrypted } : undefined,
-        crypto_wallet_address: input.cryptoWalletAddress,
+          : Prisma.JsonNull,
+        etransfer_email: input.etransferEmail ?? null,
+        wire_details: wireEncrypted ? { encrypted: wireEncrypted } : Prisma.JsonNull,
+        crypto_wallet_address: input.cryptoWalletAddress ?? null,
         mailing_address: mailingEncrypted
           ? { encrypted: mailingEncrypted }
-          : undefined,
+          : Prisma.JsonNull,
       },
     });
   }
@@ -91,8 +107,9 @@ export class CreatorPayoutPreferenceService {
   ) {
     const decryptJson = (
       val: unknown,
-    ): Record<string, unknown> | undefined => {
-      if (!val || typeof val !== 'object') return undefined;
+    ): Record<string, unknown> | null => {
+      if (val === null || val === undefined) return null;
+      if (typeof val !== 'object') return null;
       const obj = val as Record<string, unknown>;
       if (typeof obj['encrypted'] === 'string') {
         return JSON.parse(this.encryption.decrypt(obj['encrypted'])) as Record<

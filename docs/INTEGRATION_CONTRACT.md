@@ -2,7 +2,7 @@
 
 > Version: 1.0
 > Rule applied: `GOVERNANCE-EQ-v1`
-> All financial writes are append-only. Corrections use OFFSET/reversal entries - never UPDATE or DELETE.
+> All financial writes are append-only. Corrections use OFFSET/reversal entries — never UPDATE or DELETE on financial data rows. Status and lifecycle fields advance forward-only via monotonic state transitions.
 
 ---
 
@@ -23,7 +23,7 @@ PayoutMethod (maps to DB enum: payout_method)
 
 ### POST /payouts/preference
 
-Set or update a creator's payout preference. Sensitive fields are KMS-encrypted at rest.
+Set or update a creator's payout preference. Sensitive fields are AES-256-GCM encrypted at rest using `ENCRYPTION_MASTER_KEY`.
 
 Headers:
 
@@ -168,7 +168,7 @@ Response 404 - request not found or not owned by this creator.
 Headers:
 
 ```text
-x-creator-id: <uuid>   (required)
+x-creator-id: <uuid>   (required - set by API gateway)
 Content-Type: application/json
 ```
 
@@ -312,11 +312,12 @@ Response 200:
 
 | Model                     | Field                    | Encrypted                   |
 | ------------------------- | ------------------------ | --------------------------- |
-| `CreatorPayoutPreference` | `direct_deposit_details` | Yes - AES-256-GCM JSON blob |
-| `CreatorPayoutPreference` | `wire_details`           | Yes - AES-256-GCM JSON blob |
-| `CreatorPayoutPreference` | `mailing_address`        | Yes - AES-256-GCM JSON blob |
-| `CreatorPayoutPreference` | `etransfer_email`        | No - low sensitivity        |
-| `CreatorPayoutPreference` | `crypto_wallet_address`  | No - public address         |
+| `CreatorPayoutPreference` | `direct_deposit_details` | Yes - AES-256-GCM via ENCRYPTION_MASTER_KEY |
+| `CreatorPayoutPreference` | `wire_details`           | Yes - AES-256-GCM via ENCRYPTION_MASTER_KEY |
+| `CreatorPayoutPreference` | `mailing_address`        | Yes - AES-256-GCM via ENCRYPTION_MASTER_KEY |
+| `CreatorPayoutPreference` | `etransfer_email`        | No - low sensitivity                        |
+| `CreatorPayoutPreference` | `crypto_wallet_address`  | No - public address                         |
 
 Stored as `{ "encrypted": "<iv:authTag:ciphertext>" }` in the Json column.
 Decrypted in `CreatorPayoutPreferenceService.getByCreatorId()` before returning to caller.
+Sensitive fields are always decrypted server-side and returned only to the authenticated creator via the x-creator-id header gated endpoint.

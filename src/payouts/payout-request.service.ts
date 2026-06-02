@@ -10,6 +10,14 @@ import { randomUUID } from 'crypto';
 const MINIMUM_PAYOUT_CENTS = 5000; // $50.00 CAD
 const RULE_APPLIED_ID = 'GOVERNANCE-EQ-v1';
 
+const VALID_PAYOUT_METHODS = new Set([
+  'DIRECT_DEPOSIT',
+  'E_TRANSFER',
+  'WIRE_TRANSFER',
+  'CHECK_BY_MAIL',
+  'CRYPTO_NOWPAYMENTS',
+]);
+
 export interface SubmitPayoutRequestInput {
   creatorId: string;
   amountCents: number;
@@ -24,10 +32,18 @@ export class PayoutRequestService {
   ) {}
 
   async submit(input: SubmitPayoutRequestInput) {
+    if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) {
+      throw new BadRequestException('amountCents must be a positive integer');
+    }
+
     if (input.amountCents < MINIMUM_PAYOUT_CENTS) {
       throw new BadRequestException(
         `Minimum payout amount is $${MINIMUM_PAYOUT_CENTS / 100} CAD`,
       );
+    }
+
+    if (!VALID_PAYOUT_METHODS.has(input.method)) {
+      throw new BadRequestException(`Invalid payout method: ${input.method}`);
     }
 
     const activeHold = await this.prisma.payoutRequest.findFirst({

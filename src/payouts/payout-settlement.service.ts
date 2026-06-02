@@ -20,21 +20,29 @@ export class PayoutSettlementService {
   ) {}
 
   async processPayoutRequest(payoutRequestId: string): Promise<void> {
-    const request = await this.prisma.payoutRequest.findUnique({
-      where: { id: payoutRequestId },
+    // Atomically advance status PENDING -> PROCESSING to prevent duplicate settlement
+    const updated = await this.prisma.payoutRequest.updateMany({
+      where: { id: payoutRequestId, status: 'PENDING' },
+      data: { status: 'PROCESSING' },
     });
 
-    if (!request) {
-      throw new NotFoundException(
-        `PayoutRequest ${payoutRequestId} not found`,
-      );
-    }
-
-    if (request.status !== 'PENDING') {
+    if (updated.count === 0) {
+      const request = await this.prisma.payoutRequest.findUnique({
+        where: { id: payoutRequestId },
+      });
+      if (!request) {
+        throw new NotFoundException(
+          `PayoutRequest ${payoutRequestId} not found`,
+        );
+      }
       throw new BadRequestException(
         `PayoutRequest ${payoutRequestId} is not in PENDING status`,
       );
     }
+
+    const request = await this.prisma.payoutRequest.findUniqueOrThrow({
+      where: { id: payoutRequestId },
+    });
 
     const correlationId = `psett_${randomUUID()}`;
     const requestWithMethod = { ...request, method: String(request.method) };
@@ -68,11 +76,16 @@ export class PayoutSettlementService {
       data: {
         payout_request_id: request.id,
         method: 'CRYPTO_NOWPAYMENTS',
-        status: 'PROCESSING',
+        status: 'SETTLED',
         external_ref: `nowpayments_stub_${randomUUID()}`,
         rule_applied_id: RULE_APPLIED_ID,
         correlation_id: correlationId,
       },
+    });
+
+    await this.prisma.payoutRequest.update({
+      where: { id: request.id },
+      data: { status: 'SETTLED' },
     });
 
     this.eventPublisher.publish({
