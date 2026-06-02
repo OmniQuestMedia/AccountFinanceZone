@@ -25,14 +25,14 @@ PayoutMethod (maps to DB enum: payout_method)
 
 Set or update a creator's payout preference. Sensitive fields are KMS-encrypted at rest.
 
-#### Headers
+Headers:
 
 ```text
 x-creator-id: <uuid>   (required)
 Content-Type: application/json
 ```
 
-#### Request body
+Request body:
 
 ```json
 {
@@ -41,7 +41,7 @@ Content-Type: application/json
 }
 ```
 
-#### Response 200
+Response 200:
 
 ```json
 {
@@ -65,13 +65,13 @@ Content-Type: application/json
 
 Retrieve the authenticated creator's current payout preference. Encrypted fields are decrypted on read.
 
-#### Headers
+Headers:
 
 ```text
 x-creator-id: <uuid>   (required)
 ```
 
-Response 200 - same shape as POST response above.
+Response 200 - same shape as POST /payouts/preference response above.
 
 Response 404 - if no preference has been set.
 
@@ -81,14 +81,14 @@ Response 404 - if no preference has been set.
 
 Submit a payout request. Validates minimum threshold ($50 CAD), no active holds.
 
-#### Headers
+Headers:
 
 ```text
 x-creator-id: <uuid>   (required)
 Content-Type: application/json
 ```
 
-#### Request body
+Request body:
 
 ```json
 {
@@ -97,7 +97,7 @@ Content-Type: application/json
 }
 ```
 
-#### Response 201
+Response 201:
 
 ```json
 {
@@ -121,7 +121,9 @@ Response 400 - amount below $50, or existing active request in flight.
 
 List all payout requests for the authenticated creator, newest first.
 
-#### Response 200
+Headers: `x-creator-id: <uuid>` (required)
+
+Response 200:
 
 ```json
 [
@@ -141,7 +143,9 @@ List all payout requests for the authenticated creator, newest first.
 
 Get status and settlement details for a single payout request.
 
-#### Response 200
+Headers: `x-creator-id: <uuid>` (required)
+
+Response 200:
 
 ```json
 {
@@ -161,20 +165,20 @@ Response 404 - request not found or not owned by this creator.
 
 ### POST /theatre/shows
 
-#### Headers
+Headers:
 
 ```text
 x-creator-id: <uuid>   (required)
 Content-Type: application/json
 ```
 
-#### Request body
+Request body:
 
 ```json
 { "ticketPriceCents": 500 }
 ```
 
-#### Response 201
+Response 201:
 
 ```json
 {
@@ -190,7 +194,7 @@ Content-Type: application/json
 
 ### POST /theatre/shows/:id/linger
 
-#### Request body
+Request body:
 
 ```json
 {
@@ -200,9 +204,7 @@ Content-Type: application/json
 }
 ```
 
-#### Response 201
-
-LingerEvent record. Response 400 - show not ACTIVE.
+Response 201 - LingerEvent record. Response 400 - show not ACTIVE.
 
 ---
 
@@ -211,7 +213,7 @@ LingerEvent record. Response 400 - show not ACTIVE.
 Algorithm: `creator_pool = floor(ticket_price * tickets * 0.70)`,
 `creator_share = floor(pool * creator_seconds / total_seconds)`
 
-#### Response 200
+Response 200:
 
 ```json
 {
@@ -229,7 +231,7 @@ Algorithm: `creator_pool = floor(ticket_price * tickets * 0.70)`,
 
 Read-only preview. Same payout calculation, no state mutation.
 
-#### Response 200
+Response 200:
 
 ```json
 {
