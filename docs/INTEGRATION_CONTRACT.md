@@ -310,8 +310,8 @@ Response 200:
 
 ## KMS Encryption
 
-| Model                     | Field                    | Encrypted                   |
-| ------------------------- | ------------------------ | --------------------------- |
+| Model                     | Field                    | Encrypted                                   |
+| ------------------------- | ------------------------ | ------------------------------------------- |
 | `CreatorPayoutPreference` | `direct_deposit_details` | Yes - AES-256-GCM via ENCRYPTION_MASTER_KEY |
 | `CreatorPayoutPreference` | `wire_details`           | Yes - AES-256-GCM via ENCRYPTION_MASTER_KEY |
 | `CreatorPayoutPreference` | `mailing_address`        | Yes - AES-256-GCM via ENCRYPTION_MASTER_KEY |

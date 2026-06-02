@@ -10,22 +10,22 @@
 
 ### Payouts
 
-| Method | Path                    | Auth        | Description                                                                                                                                         |
-| ------ | ----------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Method | Path                    | Auth                                     | Description                                                                                                                                               |
+| ------ | ----------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | POST   | `/payouts/preference`   | x-creator-id header (set by API gateway) | Set or update the authenticated creator's payout preference. Sensitive bank/wire fields are AES-256-GCM encrypted (ENCRYPTION_MASTER_KEY) before storage. |
-| GET    | `/payouts/preference`   | x-creator-id header (set by API gateway) | Retrieve the authenticated creator's current payout preference. Sensitive fields are decrypted on read.                                             |
-| POST   | `/payouts/request`      | x-creator-id header (set by API gateway) | Submit a payout request. Validates minimum threshold ($50) and no active holds. Creates append-only `PayoutRequest` record. |
-| GET    | `/payouts/requests`     | x-creator-id header (set by API gateway) | List all payout requests for the authenticated creator.                                                                                             |
-| GET    | `/payouts/requests/:id` | x-creator-id header (set by API gateway) | Get status of a single payout request.                                                                                                              |
+| GET    | `/payouts/preference`   | x-creator-id header (set by API gateway) | Retrieve the authenticated creator's current payout preference. Sensitive fields are decrypted on read.                                                   |
+| POST   | `/payouts/request`      | x-creator-id header (set by API gateway) | Submit a payout request. Validates minimum threshold ($50) and no active holds. Creates append-only `PayoutRequest` record.                               |
+| GET    | `/payouts/requests`     | x-creator-id header (set by API gateway) | List all payout requests for the authenticated creator.                                                                                                   |
+| GET    | `/payouts/requests/:id` | x-creator-id header (set by API gateway) | Get status of a single payout request.                                                                                                                    |
 
 ### Theatre / Linger
 
-| Method | Path                                | Auth            | Description                                                                                           |
-| ------ | ----------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------- |
+| Method | Path                                | Auth                                     | Description                                                                                           |
+| ------ | ----------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | POST   | `/theatre/shows`                    | x-creator-id header (set by API gateway) | Create a new theatre show block.                                                                      |
-| POST   | `/theatre/shows/:id/linger`         | System/Internal | Record a viewer linger event (viewer-seconds in show block). Append-only.                             |
-| POST   | `/theatre/shows/:id/settle`         | Admin/System (internal)    | Settle the show block: calculate per-creator payouts and append ledger entries. Marks show `SETTLED`. |
-| GET    | `/theatre/shows/:id/payout-preview` | Creator/Admin   | Preview payout distribution before settlement. Read-only.                                             |
+| POST   | `/theatre/shows/:id/linger`         | System/Internal                          | Record a viewer linger event (viewer-seconds in show block). Append-only.                             |
+| POST   | `/theatre/shows/:id/settle`         | Admin/System (internal)                  | Settle the show block: calculate per-creator payouts and append ledger entries. Marks show `SETTLED`. |
+| GET    | `/theatre/shows/:id/payout-preview` | Creator/Admin                            | Preview payout distribution before settlement. Read-only.                                             |
 
 ---
 
@@ -59,24 +59,24 @@ All events are delivered to eCommsZone via the v1.1 webhook contract (`ECOMMSZON
 
 ## Environment Variables
 
-| Variable                    | Required             | Description                                                    |
-| --------------------------- | -------------------- | -------------------------------------------------------------- |
-| `DATABASE_URL`              | Yes                  | PostgreSQL connection string                                   |
-| `REDIS_URL`                 | Yes                  | Redis connection string                                        |
-| `DATA_RESIDENCY_REGION`     | Yes                  | Must be `ca-central-1` (enforced)                              |
-| `COMPLIANCE_ZONE_URL`       | Yes                  | OmniComplianceZone base URL                                    |
-| `AWS_REGION`                | Yes                  | Must be `ca-central-1`                                         |
-| `AWS_KMS_KEY_ID`            | Yes                  | ARN of the KMS key for encryption at rest                      |
-| `AWS_KMS_KEY_ALIAS`         | Yes                  | KMS key alias (e.g. `alias/accountfinancezone-encryption-key`) |
-| `AWS_ACCESS_KEY_ID`         | No                   | Use IAM roles in production                                    |
-| `AWS_SECRET_ACCESS_KEY`     | No                   | Use IAM roles in production                                    |
-| `DB_ENCRYPTION_ENABLED`     | Yes                  | Enable pgcrypto column-level encryption                        |
-| `ECOMMSZONE_WEBHOOK_URL`    | Yes                  | eCommsZone webhook delivery endpoint                           |
-| `ECOMMSZONE_WEBHOOK_SECRET` | No                   | HMAC-SHA256 signing secret for webhook delivery                |
-| `NOWPAYMENTS_API_KEY`       | Yes (crypto payouts) | NOWPayments API key for CRYPTO_NOWPAYMENTS settlements         |
+| Variable                    | Required             | Description                                                                      |
+| --------------------------- | -------------------- | -------------------------------------------------------------------------------- |
+| `DATABASE_URL`              | Yes                  | PostgreSQL connection string                                                     |
+| `REDIS_URL`                 | Yes                  | Redis connection string                                                          |
+| `DATA_RESIDENCY_REGION`     | Yes                  | Must be `ca-central-1` (enforced)                                                |
+| `COMPLIANCE_ZONE_URL`       | Yes                  | OmniComplianceZone base URL                                                      |
+| `AWS_REGION`                | Yes                  | Must be `ca-central-1`                                                           |
+| `AWS_KMS_KEY_ID`            | Yes                  | ARN of the KMS key for encryption at rest                                        |
+| `AWS_KMS_KEY_ALIAS`         | Yes                  | KMS key alias (e.g. `alias/accountfinancezone-encryption-key`)                   |
+| `AWS_ACCESS_KEY_ID`         | No                   | Use IAM roles in production                                                      |
+| `AWS_SECRET_ACCESS_KEY`     | No                   | Use IAM roles in production                                                      |
+| `DB_ENCRYPTION_ENABLED`     | Yes                  | Enable pgcrypto column-level encryption                                          |
+| `ECOMMSZONE_WEBHOOK_URL`    | Yes                  | eCommsZone webhook delivery endpoint                                             |
+| `ECOMMSZONE_WEBHOOK_SECRET` | No                   | HMAC-SHA256 signing secret for webhook delivery                                  |
+| `NOWPAYMENTS_API_KEY`       | Yes (crypto payouts) | NOWPayments API key for CRYPTO_NOWPAYMENTS settlements                           |
 | `ENCRYPTION_MASTER_KEY`     | Yes                  | 32-byte hex key for AES-256-GCM encryption of sensitive payout preference fields |
-| `NODE_ENV`                  | Yes                  | `development` or `production`                                  |
-| `PORT`                      | No                   | HTTP listen port (default: 3000)                               |
+| `NODE_ENV`                  | Yes                  | `development` or `production`                                                    |
+| `PORT`                      | No                   | HTTP listen port (default: 3000)                                                 |
 
 ---
 
