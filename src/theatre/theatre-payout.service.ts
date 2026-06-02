@@ -138,62 +138,71 @@ export class TheatrePayoutService {
         throw new NotFoundException(`TheatreShow ${showId} not found`);
       }
       throw new BadRequestException(
-        `Show ${showId} is not in ACTIVE status - already settled?`,
+        `Show ${showId} is not in ACTIVE status (current: ${show.status})`,
       );
     }
 
-    const payouts = await this.calculateBlockPayout(showId);
-    const auditTraceId = `audit_theatre_${randomUUID()}`;
+    try {
+      const payouts = await this.calculateBlockPayout(showId);
+      const auditTraceId = `audit_theatre_${randomUUID()}`;
 
-    const ledgerEntries: Array<{ creatorId: string; amountCents: number; entryId: string }> = [];
+      const ledgerEntries: Array<{ creatorId: string; amountCents: number; entryId: string }> = [];
 
-    for (const [creatorId, amountCents] of payouts.entries()) {
-      if (amountCents <= 0) continue;
+      for (const [creatorId, amountCents] of payouts.entries()) {
+        if (amountCents <= 0) continue;
 
-      const complianceDecision = this.compliance.evaluate({
-        operation: 'PAYOUT',
-        accountId: creatorId,
-        amountMinor: BigInt(amountCents),
-        currency: 'CAD',
-        residencyRegion: 'CA',
-      });
+        const complianceDecision = this.compliance.evaluate({
+          operation: 'PAYOUT',
+          accountId: creatorId,
+          amountMinor: BigInt(amountCents),
+          currency: 'CAD',
+          residencyRegion: 'CA',
+        });
 
-      if (!complianceDecision.approved) {
-        throw new BadRequestException(
-          `Compliance check failed for creator ${creatorId}: ${complianceDecision.reason}`,
-        );
+        if (!complianceDecision.approved) {
+          throw new BadRequestException(
+            `Compliance check failed for creator ${creatorId}: ${complianceDecision.reason}`,
+          );
+        }
+
+        const entry = this.ledger.appendEntry({
+          accountId: creatorId,
+          entryType: 'CREDIT',
+          amountMinor: BigInt(amountCents),
+          currency: 'CAD',
+          context: { ruleAppliedId: RULE_APPLIED_ID, auditTraceId },
+        });
+
+        ledgerEntries.push({ creatorId, amountCents, entryId: entry.id });
       }
 
-      const entry = this.ledger.appendEntry({
-        accountId: creatorId,
-        entryType: 'CREDIT',
-        amountMinor: BigInt(amountCents),
-        currency: 'CAD',
-        context: { ruleAppliedId: RULE_APPLIED_ID, auditTraceId },
+      await this.prisma.theatreShow.update({
+        where: { id: showId },
+        data: {
+          block_end_at: new Date(),
+          status: 'SETTLED',
+        },
       });
 
-      ledgerEntries.push({ creatorId, amountCents, entryId: entry.id });
+      const payoutMap = Object.fromEntries(
+        ledgerEntries.map((e) => [e.creatorId, e.amountCents]),
+      );
+
+      this.eventPublisher.publish({
+        type: 'theatre.block.settled',
+        aggregateId: showId,
+        payload: { showId, payouts: payoutMap },
+        emittedAt: new Date().toISOString(),
+      });
+
+      return { showId, ledgerEntries, payouts: payoutMap };
+    } catch (err) {
+      // Mark FAILED so the show isn't permanently wedged in SETTLING
+      await this.prisma.theatreShow.update({
+        where: { id: showId },
+        data: { status: 'FAILED' },
+      });
+      throw err;
     }
-
-    await this.prisma.theatreShow.update({
-      where: { id: showId },
-      data: {
-        block_end_at: new Date(),
-        status: 'SETTLED',
-      },
-    });
-
-    const payoutMap = Object.fromEntries(
-      ledgerEntries.map((e) => [e.creatorId, e.amountCents]),
-    );
-
-    this.eventPublisher.publish({
-      type: 'theatre.block.settled',
-      aggregateId: showId,
-      payload: { showId, payouts: payoutMap },
-      emittedAt: new Date().toISOString(),
-    });
-
-    return { showId, ledgerEntries, payouts: payoutMap };
   }
 }

@@ -59,24 +59,24 @@ All events are delivered to eCommsZone via the v1.1 webhook contract (`ECOMMSZON
 
 ## Environment Variables
 
-| Variable                    | Required             | Description                                                                      |
-| --------------------------- | -------------------- | -------------------------------------------------------------------------------- |
-| `DATABASE_URL`              | Yes                  | PostgreSQL connection string                                                     |
-| `REDIS_URL`                 | Yes                  | Redis connection string                                                          |
-| `DATA_RESIDENCY_REGION`     | Yes                  | Must be `ca-central-1` (enforced)                                                |
-| `COMPLIANCE_ZONE_URL`       | Yes                  | OmniComplianceZone base URL                                                      |
-| `AWS_REGION`                | Yes                  | Must be `ca-central-1`                                                           |
-| `AWS_KMS_KEY_ID`            | Yes                  | ARN of the KMS key for encryption at rest                                        |
-| `AWS_KMS_KEY_ALIAS`         | Yes                  | KMS key alias (e.g. `alias/accountfinancezone-encryption-key`)                   |
-| `AWS_ACCESS_KEY_ID`         | No                   | Use IAM roles in production                                                      |
-| `AWS_SECRET_ACCESS_KEY`     | No                   | Use IAM roles in production                                                      |
-| `DB_ENCRYPTION_ENABLED`     | Yes                  | Enable pgcrypto column-level encryption                                          |
-| `ECOMMSZONE_WEBHOOK_URL`    | Yes                  | eCommsZone webhook delivery endpoint                                             |
-| `ECOMMSZONE_WEBHOOK_SECRET` | No                   | HMAC-SHA256 signing secret for webhook delivery                                  |
-| `NOWPAYMENTS_API_KEY`       | Yes (crypto payouts) | NOWPayments API key for CRYPTO_NOWPAYMENTS settlements                           |
-| `ENCRYPTION_MASTER_KEY`     | Yes                  | 32-byte hex key for AES-256-GCM encryption of sensitive payout preference fields |
-| `NODE_ENV`                  | Yes                  | `development` or `production`                                                    |
-| `PORT`                      | No                   | HTTP listen port (default: 3000)                                                 |
+| Variable                    | Required             | Description                                                                                                      |
+| --------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`              | Yes                  | PostgreSQL connection string                                                                                     |
+| `REDIS_URL`                 | Yes                  | Redis connection string                                                                                          |
+| `DATA_RESIDENCY_REGION`     | Yes                  | Must be `ca-central-1` (enforced)                                                                                |
+| `COMPLIANCE_ZONE_URL`       | Yes                  | OmniComplianceZone base URL                                                                                      |
+| `AWS_REGION`                | Yes                  | Must be `ca-central-1`                                                                                           |
+| `AWS_KMS_KEY_ID`            | Yes                  | ARN of the KMS key for encryption at rest                                                                        |
+| `AWS_KMS_KEY_ALIAS`         | Yes                  | KMS key alias (e.g. `alias/accountfinancezone-encryption-key`)                                                   |
+| `AWS_ACCESS_KEY_ID`         | No                   | Use IAM roles in production                                                                                      |
+| `AWS_SECRET_ACCESS_KEY`     | No                   | Use IAM roles in production                                                                                      |
+| `DB_ENCRYPTION_ENABLED`     | Yes                  | Enable pgcrypto column-level encryption                                                                          |
+| `ECOMMSZONE_WEBHOOK_URL`    | Yes                  | eCommsZone webhook delivery endpoint                                                                             |
+| `ECOMMSZONE_WEBHOOK_SECRET` | No                   | HMAC-SHA256 signing secret for webhook delivery                                                                  |
+| `NOWPAYMENTS_API_KEY`       | Yes (crypto payouts) | NOWPayments API key for CRYPTO_NOWPAYMENTS settlements                                                           |
+| `ENCRYPTION_MASTER_KEY`     | Yes                  | Arbitrary string; SHA-256 hashed at runtime to derive the AES-256-GCM key for sensitive payout preference fields |
+| `NODE_ENV`                  | Yes                  | `development` or `production`                                                                                    |
+| `PORT`                      | No                   | HTTP listen port (default: 3000)                                                                                 |
 
 ---
 

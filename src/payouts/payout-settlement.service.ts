@@ -36,7 +36,7 @@ export class PayoutSettlementService {
         );
       }
       throw new BadRequestException(
-        `PayoutRequest ${payoutRequestId} is not in PENDING status`,
+        `PayoutRequest ${payoutRequestId} is not in PENDING status (current: ${request.status})`,
       );
     }
 

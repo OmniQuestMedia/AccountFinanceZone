@@ -74,7 +74,9 @@ describe('PayoutSettlementService', () => {
       }),
     );
 
-    process.env.NOWPAYMENTS_API_KEY = origEnv;
+    if (origEnv !== undefined) {
+      process.env.NOWPAYMENTS_API_KEY = origEnv;
+    }
   });
 
   it('advances request status to SETTLED after NOWPayments stub', async () => {
@@ -85,6 +87,7 @@ describe('PayoutSettlementService', () => {
     const publisher = { publish: jest.fn() };
     const service = new PayoutSettlementService(prisma as never, publisher as never);
 
+    const origNowKey = process.env.NOWPAYMENTS_API_KEY;
     process.env.NOWPAYMENTS_API_KEY = 'test-key';
 
     const cryptoRequest = makeRequest();
@@ -104,6 +107,10 @@ describe('PayoutSettlementService', () => {
       expect.objectContaining({ type: 'payout.settled' }),
     );
 
-    delete process.env.NOWPAYMENTS_API_KEY;
+    if (origNowKey !== undefined) {
+      process.env.NOWPAYMENTS_API_KEY = origNowKey;
+    } else {
+      delete process.env.NOWPAYMENTS_API_KEY;
+    }
   });
 });
