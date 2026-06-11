@@ -1,0 +1,45 @@
+services:
+  app:
+    build: .
+    command: npm run start:dev
+    ports:
+      - '3000:3000'
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/accounts_finance_zone
+      REDIS_URL: redis://redis:6379
+      COMPLIANCE_ZONE_URL: http://omni-compliance-zone:4000
+      DATA_RESIDENCY_REGION: ca-central-1
+      AWS_REGION: ca-central-1
+      AWS_KMS_KEY_ID: ${AWS_KMS_KEY_ID:-}
+      AWS_KMS_KEY_ALIAS: alias/accountfinancezone-encryption-key
+      DB_ENCRYPTION_ENABLED: ${DB_ENCRYPTION_ENABLED:-true}
+      ECOMMSZONE_WEBHOOK_SECRET: ${ECOMMSZONE_WEBHOOK_SECRET:-}
+      NODE_ENV: ${NODE_ENV:-development}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      - redis
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: accounts_finance_zone
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # Enable pgcrypto extension for database-level encryption
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=en_US.utf8"
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./prisma/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:7
+    ports:
+      - '6379:6379'
+volumes:
+  postgres_data:

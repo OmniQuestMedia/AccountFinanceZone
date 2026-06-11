@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TransactionType {
+  PURCHASE
+  SUBSCRIPTION
+  ONE_TIME_PAYMENT
+  REFUND
+  CHARGEBACK
+  PAYOUT
+}
+
+enum LedgerEntryType {
+  CREDIT
+  DEBIT
+  OFFSET
+}
+
+enum FraudDecision {
+  ALLOW
+  REVIEW
+  BLOCK
+}
+
+model PaymentMethodToken {
+  id                String   @id @default(cuid())
+  accountId         String
+  provider          String
+  providerToken     String
+  tokenFingerprint  String
+  residencyRegion   String   @default("CA")
+  createdAt         DateTime @default(now())
+  transactions      Transaction[]
+
+  @@index([accountId])
+}
+
+model Transaction {
+  id                String          @id @default(cuid())
+  accountId         String
+  creatorAccountId  String?
+  type              TransactionType
+  amountMinor       BigInt
+  currency          String
+  paymentTokenId    String
+  status            String
+  riskScore         Int             @default(0)
+  ruleAppliedId     String
+  sourceEventId     String?
+  createdAt         DateTime        @default(now())
+
+  paymentToken      PaymentMethodToken @relation(fields: [paymentTokenId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([accountId, createdAt])
+  @@index([ruleAppliedId])
+}
+
+model LedgerEntry {
+  id                String          @id @default(cuid())
+  accountId         String
+  transactionId     String?
+  entryType         LedgerEntryType
+  amountMinor       BigInt
+  currency          String
+  ruleAppliedId     String
+  offsetOfEntryId   String?
+  auditTraceId      String
+  createdAt         DateTime        @default(now())
+
+  @@index([accountId, createdAt])
+  @@index([ruleAppliedId])
+  @@index([offsetOfEntryId])
+}
+
+model Payout {
+  id                String   @id @default(cuid())
+  creatorAccountId  String
+  amountMinor       BigInt
+  currency          String
+  revenueShareBps   Int
+  status            String
+  ruleAppliedId     String
+  createdAt         DateTime @default(now())
+
+  @@index([creatorAccountId, createdAt])
+  @@index([ruleAppliedId])
+}
+
+model FraudAssessment {
+  id                String        @id @default(cuid())
+  transactionId     String
+  riskScore         Int
+  decision          FraudDecision
+  flags             Json
+  ruleAppliedId     String
+  createdAt         DateTime      @default(now())
+
+  @@index([transactionId, createdAt])
+  @@index([ruleAppliedId])
+}
+
+model AuditTrail {
+  id                String   @id @default(cuid())
+  aggregateType     String
+  aggregateId       String
+  eventType         String
+  payload           Json
+  ruleAppliedId     String
+  actorType         String
+  createdAt         DateTime @default(now())
+
+  @@index([aggregateType, aggregateId, createdAt])
+  @@index([ruleAppliedId])
+}
+
+// ---------------------------------------------------------------------------
+// Payout rails
+// ---------------------------------------------------------------------------
+
+enum PayoutMethod {
+  DIRECT_DEPOSIT
+  E_TRANSFER
+  WIRE_TRANSFER
+  CHECK_BY_MAIL
+  CRYPTO_NOWPAYMENTS
+
+  @@map("payout_method")
+}
+
+enum PayoutRequestStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  SETTLED
+  FAILED
+  CANCELLED
+
+  @@map("payout_request_status")
+}
+
+model CreatorPayoutPreference {
+  id                     String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creator_id             String       @unique @db.Uuid
+  preferred_method       PayoutMethod
+  direct_deposit_details Json?
+  etransfer_email        String?      @db.VarChar(200)
+  wire_details           Json?
+  crypto_wallet_address  String?      @db.VarChar(200)
+  mailing_address        Json?
+  correlation_id         String       @unique @db.VarChar(200)
+  created_at             DateTime     @default(now()) @db.Timestamptz
+  updated_at             DateTime     @updatedAt @db.Timestamptz
+
+  @@map("creator_payout_preferences")
+}
+
+model PayoutRequest {
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creator_id      String              @db.Uuid
+  amount_cents    Int
+  currency        String              @default("CAD") @db.VarChar(3)
+  method          PayoutMethod
+  status          PayoutRequestStatus @default(PENDING)
+  rule_applied_id String              @db.VarChar(200)
+  correlation_id  String              @unique @db.VarChar(200)
+  created_at      DateTime            @default(now()) @db.Timestamptz
+
+  settlements     PayoutSettlement[]
+
+  @@index([creator_id, created_at])
+  @@index([rule_applied_id])
+  @@map("payout_requests")
+}
+
+model PayoutSettlement {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  payout_request_id String       @db.Uuid
+  method            PayoutMethod
+  status            String       @db.VarChar(50)
+  external_ref      String?      @db.VarChar(500)
+  rule_applied_id   String       @db.VarChar(200)
+  correlation_id    String       @unique @db.VarChar(200)
+  created_at        DateTime     @default(now()) @db.Timestamptz
+
+  request           PayoutRequest @relation(fields: [payout_request_id], references: [id])
+
+  @@index([payout_request_id])
+  @@index([rule_applied_id])
+  @@map("payout_settlements")
+}
+
+// ---------------------------------------------------------------------------
+// Theatre / Linger payout engine
+// ---------------------------------------------------------------------------
+
+model TheatreShow {
+  id                 String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  creator_id         String    @db.Uuid
+  ticket_price_cents Int
+  block_start_at     DateTime  @db.Timestamptz
+  block_end_at       DateTime? @db.Timestamptz
+  status             String    @default("ACTIVE") @db.VarChar(20)
+  correlation_id     String    @unique @db.VarChar(200)
+  created_at         DateTime  @default(now()) @db.Timestamptz
+
+  tickets            TheatreTicket[]
+  linger_events      LingerEvent[]
+
+  @@index([creator_id])
+  @@map("theatre_shows")
+}
+
+model TheatreTicket {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  show_id        String   @db.Uuid
+  guest_id       String   @db.Uuid
+  price_cents    Int
+  correlation_id String   @unique @db.VarChar(200)
+  created_at     DateTime @default(now()) @db.Timestamptz
+
+  show           TheatreShow @relation(fields: [show_id], references: [id])
+
+  @@index([show_id])
+  @@map("theatre_tickets")
+}
+
+model LingerEvent {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  show_id        String   @db.Uuid
+  guest_id       String   @db.Uuid
+  creator_id     String   @db.Uuid
+  viewer_seconds Int
+  correlation_id String   @unique @db.VarChar(200)
+  created_at     DateTime @default(now()) @db.Timestamptz
+
+  show           TheatreShow @relation(fields: [show_id], references: [id])
+
+  @@index([show_id])
+  @@map("linger_events")
+}
