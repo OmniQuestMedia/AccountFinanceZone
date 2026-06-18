@@ -1,0 +1,70 @@
+name: Financial Invariants Check
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main, migration-prep]
+
+jobs:
+  financial-invariants:
+    name: Ledger & Wallet Invariants
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      - name: Check for ledger mutation violations
+        run: |
+          echo "Scanning for UPDATE/DELETE on ledger_entries in migrations..."
+          if grep -r --include='*.sql' --include='*.ts' -E '(UPDATE|DELETE)\s+(FROM\s+)?ledger_entries' prisma/ src/ 2>/dev/null; then
+            echo "FAIL: Found UPDATE or DELETE on ledger_entries — violates append-only invariant"
+            exit 1
+          else
+            echo "PASS: No ledger_entries mutations found"
+          fi
+
+      - name: Check for cash refund endpoints
+        run: |
+          echo "Scanning for cash refund endpoints..."
+          if grep -r --include='*.ts' -E '(refund|REFUND).*cash|(cash).*(refund|REFUND)' src/ 2>/dev/null | grep -v '.spec.' | grep -v 'chargeback' | grep -v 'no.refund' | grep -v 'noRefund'; then
+            echo "WARN: Possible cash refund logic found — review required"
+          else
+            echo "PASS: No cash refund endpoints detected"
+          fi
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "Scanning for hardcoded secrets patterns..."
+          if grep -r --include='*.ts' --include='*.js' -E '(sk_live_|pk_live_|rk_live_|whsec_)[A-Za-z0-9]+' src/ services/ 2>/dev/null; then
+            echo "FAIL: Hardcoded Stripe live keys found"
+            exit 1
+          else
+            echo "PASS: No hardcoded live keys found"
+          fi
+
+      - name: Verify three-bucket spend order guard exists
+        run: |
+          echo "Checking for bucket spend order enforcement..."
+          if grep -r --include='*.ts' -E 'promotional|PROMOTIONAL' src/ledger/ src/billing/ src/transactions/ 2>/dev/null | grep -q .; then
+            echo "PASS: Bucket terminology found in ledger/billing/transactions"
+          else
+            echo "WARN: Three-bucket spend order enforcement not detected — manual review required"
+          fi
