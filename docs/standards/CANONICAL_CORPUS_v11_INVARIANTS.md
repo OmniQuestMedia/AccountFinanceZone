@@ -17,11 +17,11 @@
 
 All wallet balances are segmented into three buckets, debited in strict order:
 
-| Priority | Bucket | Description |
-|----------|--------|-------------|
-| 1 | `promotional` | Promotional/bonus credits — spent first |
-| 2 | `rewards` | RedRoomRewards earned credits — spent second |
-| 3 | `cash` | Real money / payment-backed funds — spent last |
+| Priority | Bucket        | Description                                      |
+| -------- | ------------- | ------------------------------------------------ |
+| 1        | `promotional` | Promotional/bonus credits — spent first          |
+| 2        | `rewards`     | RedRoomRewards earned credits — spent second     |
+| 3        | `cash`        | Real money / payment-backed funds — spent last   |
 
 - No out-of-order debit is permitted. A transaction that skips bucket order is rejected.
 - Bucket balances must each be >= 0 at all times (no negative balance per bucket).

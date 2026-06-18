@@ -12,7 +12,7 @@
 The following branches were identified as stale (no active PR, older than 30 days or clearly superseded).
 Manual deletion required via GitHub UI or `git push origin --delete <branch>`:
 
-```
+```text
 agent/cowork-orch-2026-05-19-droid-rollout
 claude/add-copilot-instructions-file
 claude/add-revenue-share-ledger
@@ -35,6 +35,7 @@ feature/playbooks-reference-v1
 Go to: **GitHub → AccountFinanceZone → Settings → Branches → Add rule**
 
 Set for `main`:
+
 - [x] Require a pull request before merging
 - [x] Require approvals: 1
 - [x] Require status checks to pass: `financial-invariants` (Financial Invariants Check)

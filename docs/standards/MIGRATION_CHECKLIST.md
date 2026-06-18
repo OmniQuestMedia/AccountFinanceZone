@@ -3,6 +3,7 @@
 > Window: FullHost server migration (24-72h). Complete all items before cutover.
 
 ## Status Legend
+
 - `[x]` Complete
 - `[ ]` Pending
 - `[!]` Blocked / Needs Action
@@ -12,8 +13,10 @@
 ## STEP 1: Branch & Repo Hygiene
 
 - [x] `migration-prep` branch created from main
-- [!] **MANUAL REQUIRED:** Enable branch protection on `main` (require PRs, no direct push, require CI green) — GitHub Admin token needed, cannot be automated via this session
-- [!] **MANUAL REQUIRED:** Delete/archive stale branches (15 stale branches identified — no delete_branch API available in this session). Branches to archive:
+- [!] **MANUAL REQUIRED:** Enable branch protection on `main` (require PRs, no direct push, require CI green)
+      — GitHub Admin token needed, cannot be automated via this session
+- [!] **MANUAL REQUIRED:** Delete/archive stale branches (15 stale branches identified).
+      Branches to archive:
   - `agent/cowork-orch-2026-05-19-droid-rollout`
   - `claude/add-copilot-instructions-file`
   - `claude/add-revenue-share-ledger`

@@ -1,3 +1,4 @@
+---
 name: Financial Invariants Check
 
 on:
@@ -5,6 +6,9 @@ on:
     branches: [main]
   push:
     branches: [main, migration-prep]
+
+permissions:
+  contents: read
 
 jobs:
   financial-invariants:
@@ -16,8 +20,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -34,8 +38,10 @@ jobs:
       - name: Check for ledger mutation violations
         run: |
           echo "Scanning for UPDATE/DELETE on ledger_entries in migrations..."
-          if grep -r --include='*.sql' --include='*.ts' -E '(UPDATE|DELETE)\s+(FROM\s+)?ledger_entries' prisma/ src/ 2>/dev/null; then
-            echo "FAIL: Found UPDATE or DELETE on ledger_entries — violates append-only invariant"
+          if grep -r --include='*.sql' --include='*.ts' \
+            -E '(UPDATE|DELETE)\s+(FROM\s+)?ledger_entries' \
+            prisma/ src/ 2>/dev/null; then
+            echo "FAIL: Found UPDATE or DELETE on ledger_entries"
             exit 1
           else
             echo "PASS: No ledger_entries mutations found"
@@ -44,7 +50,13 @@ jobs:
       - name: Check for cash refund endpoints
         run: |
           echo "Scanning for cash refund endpoints..."
-          if grep -r --include='*.ts' -E '(refund|REFUND).*cash|(cash).*(refund|REFUND)' src/ 2>/dev/null | grep -v '.spec.' | grep -v 'chargeback' | grep -v 'no.refund' | grep -v 'noRefund'; then
+          if grep -r --include='*.ts' \
+            -E '(refund|REFUND).*cash|(cash).*(refund|REFUND)' src/ \
+            2>/dev/null \
+            | grep -v '.spec.' \
+            | grep -v 'chargeback' \
+            | grep -v 'no.refund' \
+            | grep -v 'noRefund'; then
             echo "WARN: Possible cash refund logic found — review required"
           else
             echo "PASS: No cash refund endpoints detected"
@@ -53,7 +65,9 @@ jobs:
       - name: Check for hardcoded secrets
         run: |
           echo "Scanning for hardcoded secrets patterns..."
-          if grep -r --include='*.ts' --include='*.js' -E '(sk_live_|pk_live_|rk_live_|whsec_)[A-Za-z0-9]+' src/ services/ 2>/dev/null; then
+          if grep -r --include='*.ts' --include='*.js' \
+            -E '(sk_live_|pk_live_|rk_live_|whsec_)[A-Za-z0-9]+' \
+            src/ services/ 2>/dev/null; then
             echo "FAIL: Hardcoded Stripe live keys found"
             exit 1
           else
@@ -63,8 +77,10 @@ jobs:
       - name: Verify three-bucket spend order guard exists
         run: |
           echo "Checking for bucket spend order enforcement..."
-          if grep -r --include='*.ts' -E 'promotional|PROMOTIONAL' src/ledger/ src/billing/ src/transactions/ 2>/dev/null | grep -q .; then
+          if grep -r --include='*.ts' \
+            -E 'promotional|PROMOTIONAL' \
+            src/ledger/ src/billing/ src/transactions/ 2>/dev/null | grep -q .; then
             echo "PASS: Bucket terminology found in ledger/billing/transactions"
           else
-            echo "WARN: Three-bucket spend order enforcement not detected — manual review required"
+            echo "WARN: Three-bucket spend order not detected — manual review required"
           fi

@@ -1,6 +1,7 @@
 # AccountFinanceZone
 
-AccountFinanceZone is the **finance-only bounded context** for OmniQuest Media Inc. It is intentionally separated from AccountsZone identity/profile concerns.
+AccountFinanceZone is the **finance-only bounded context** for OmniQuest Media Inc.
+It is intentionally separated from AccountsZone identity/profile concerns.
 Repository slug: `AccountFinanceZone`.
 Package name: `accounts-finance-zone`.
 
@@ -12,6 +13,7 @@ Package name: `accounts-finance-zone`.
 Track progress: [`docs/standards/MIGRATION_CHECKLIST.md`](./docs/standards/MIGRATION_CHECKLIST.md)
 
 ### Canonical Corpus v11 Invariants (must hold post-migration)
+
 1. **Append-only ledger** — no UPDATE/DELETE on `ledger_entries`. Corrections are offset entries only.
 2. **Three-bucket wallet** — spend order enforced: `promotional` → `rewards` → `cash`. No out-of-order debit.
 3. **DFSP stack** — AccountFinanceZone is the sole ledger writer. GateGuard pre-authorizes all debits.
@@ -23,6 +25,7 @@ Track progress: [`docs/standards/MIGRATION_CHECKLIST.md`](./docs/standards/MIGRA
 Full invariant spec: [`docs/standards/CANONICAL_CORPUS_v11_INVARIANTS.md`](./docs/standards/CANONICAL_CORPUS_v11_INVARIANTS.md)
 
 ### Manual Actions Required Before Cutover
+
 - [ ] Enable branch protection on `main` (GitHub UI → Settings → Branches → Add rule)
 - [ ] Delete 15 stale branches (see [`docs/standards/BRANCH_HYGIENE.md`](./docs/standards/BRANCH_HYGIENE.md))
 - [ ] Audit `services/stripe/` for deprecated API versions or hardcoded keys
@@ -31,6 +34,7 @@ Full invariant spec: [`docs/standards/CANONICAL_CORPUS_v11_INVARIANTS.md`](./doc
 ---
 
 ## Stack
+
 - TypeScript + Node.js + NestJS
 - PostgreSQL 16 + Prisma (with pgcrypto extension for encryption)
 - Redis 7
@@ -39,6 +43,7 @@ Full invariant spec: [`docs/standards/CANONICAL_CORPUS_v11_INVARIANTS.md`](./doc
 - AWS KMS (encryption at rest)
 
 ## Governance and Security Baseline
+
 - Full policy reference: [`OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md`](./OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md)
 - Governance reference: [`OQMI_GOVERNANCE.md`](./OQMI_GOVERNANCE.md)
 - Standards: [`docs/standards/`](./docs/standards/)
@@ -53,6 +58,7 @@ Full invariant spec: [`docs/standards/CANONICAL_CORPUS_v11_INVARIANTS.md`](./doc
 - Cleanup mode rule applied on every change: `GOVERNANCE-EQ-v1`
 
 ## Domain Scope
+
 - Purchases, subscriptions, one-time payments
 - Creator payouts and revenue sharing
 - Payment method token references (no raw card data)
@@ -62,6 +68,7 @@ Full invariant spec: [`docs/standards/CANONICAL_CORPUS_v11_INVARIANTS.md`](./doc
 - **No cash refunds** (Canonical Corpus v11 — VIP Refund Protocol only)
 
 ## High-Level Integration Diagram
+
 ```text
 AccountsZone events (tier change, entitlement)
               |
@@ -77,6 +84,7 @@ regulatory controls) settlement, auditing)
 ```
 
 ## Financial Invariants
+
 1. Every financial write must carry `rule_applied_id` and `auditTraceId`.
 2. Ledger is append-only; corrections are represented as offset entries.
 3. Three-bucket wallet spend order: `promotional` → `rewards` → `cash`.
@@ -86,6 +94,7 @@ regulatory controls) settlement, auditing)
 7. No cash refunds — re-issue as promotional credits only.
 
 ## Folder Structure
+
 ```text
 src/
 ├── transactions/
@@ -108,6 +117,7 @@ docs/
 ```
 
 ## Quick Start
+
 ```bash
 # Install dependencies
 npm install
@@ -126,7 +136,9 @@ docker compose up --build
 ```
 
 ## Environment Configuration
+
 Key environment variables (see `.env.example` for full list):
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `AWS_REGION` - Must be `ca-central-1` for Canadian data residency
 - `AWS_KMS_KEY_ID` - ARN of dedicated KMS key for encryption
@@ -135,22 +147,26 @@ Key environment variables (see `.env.example` for full list):
 - `DATA_RESIDENCY_REGION` - Data residency region (enforced: `ca-central-1`)
 
 ## Fast Path and Ship-Gate
+
 - Required classic branch protection checks: `ci`, `super-linter`, `ship-gate`, and `financial-invariants`
 - Non-financial cleanup PRs stay on the fast path when ship-gate reports no human review requirement
 - Human review is reserved for `src/ledger/**` and `prisma/**`
 - Direct Cyrano integration is not allowed in this repository; cross-repo delivery must use the v1.1 webhook contract
 
 ## eCommsZone Delivery
+
 - Finance events are published locally and can be forwarded to eCommsZone with `ECOMMSZONE_WEBHOOK_URL`
 - Optional HMAC signing is enabled with `ECOMMSZONE_WEBHOOK_SECRET`
 - Contract details are documented in [`WEBHOOK_CONTRACTS.md`](./WEBHOOK_CONTRACTS.md)
 
 ## Docker
+
 ```bash
 docker compose up --build
 ```
 
 ## Notes
+
 - This repo publishes finance lifecycle events: `PaymentProcessed`, `PayoutIssued`, `ChargebackRegistered`, and `FraudFlagRaised`.
 - `RefundInitiated` event is deprecated — no cash refunds permitted (Canonical Corpus v11).
 - Compliance checks are designed to call OmniComplianceZone prior to money movement.
