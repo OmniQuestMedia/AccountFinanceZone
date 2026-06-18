@@ -13,25 +13,8 @@
 ## STEP 1: Branch & Repo Hygiene
 
 - [x] `migration-prep` branch created from main
-- [!] **MANUAL REQUIRED:** Enable branch protection on `main` (require PRs, no direct push, require CI green)
-      — GitHub Admin token needed, cannot be automated via this session
-- [!] **MANUAL REQUIRED:** Delete/archive stale branches (15 stale branches identified).
-      Branches to archive:
-  - `agent/cowork-orch-2026-05-19-droid-rollout`
-  - `claude/add-copilot-instructions-file`
-  - `claude/add-revenue-share-ledger`
-  - `claude/ci-fix-yarn-install-errors`
-  - `claude/cleanup-mission-linter-code-quality`
-  - `claude/cleanup-prompts`
-  - `claude/copilot-review-fixes`
-  - `claude/final-homestretch-cleanup`
-  - `claude/hygiene-fixes`
-  - `claude/peaceful-hypatia-jz3Md`
-  - `claude/phase-4-4-security-testing-finalization`
-  - `claude/restore-full-codebase`
-  - `copilot/cleanup-governance-sync`
-  - `copilot/run-hygiene-audit`
-  - `feature/playbooks-reference-v1`
+- [!] **MANUAL:** Enable branch protection on `main` — requires GitHub Admin access
+- [!] **MANUAL:** Delete 15 stale branches — see list in [`BRANCH_HYGIENE.md`](./BRANCH_HYGIENE.md)
 
 ## STEP 2: File & System Audit
 
@@ -47,8 +30,8 @@
 - [x] `package.json` reviewed — NestJS + Prisma, no deprecated payment SDKs in root
 - [ ] Audit `services/stripe/` for hardcoded keys or deprecated API versions
 - [ ] Verify all balance mutations in `src/ledger/` use INSERT-only pattern
-- [ ] Verify `src/billing/`, `src/payouts/`, `src/transactions/` use WalletService.debit() with bucket enforcement
-- [ ] Verify chargeback package assembler in `src/fraud/` or `src/compliance/`
+- [ ] Verify `src/billing/`, `src/payouts/`, `src/transactions/` enforce bucket spend order
+- [ ] Verify chargeback package assembler exists in `src/fraud/` or `src/compliance/`
 - [ ] Verify escrow hold matrix logic exists
 - [ ] Confirm idempotency key check on all debit endpoints
 

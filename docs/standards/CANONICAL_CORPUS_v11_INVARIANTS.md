@@ -17,11 +17,11 @@
 
 All wallet balances are segmented into three buckets, debited in strict order:
 
-| Priority | Bucket        | Description                                      |
-| -------- | ------------- | ------------------------------------------------ |
-| 1        | `promotional` | Promotional/bonus credits — spent first          |
-| 2        | `rewards`     | RedRoomRewards earned credits — spent second     |
-| 3        | `cash`        | Real money / payment-backed funds — spent last   |
+| Priority | Bucket        | Description                                    |
+| -------- | ------------- | ---------------------------------------------- |
+| 1        | `promotional` | Promotional/bonus credits — spent first        |
+| 2        | `rewards`     | RedRoomRewards earned credits — spent second   |
+| 3        | `cash`        | Real money / payment-backed funds — spent last |
 
 - No out-of-order debit is permitted. A transaction that skips bucket order is rejected.
 - Bucket balances must each be >= 0 at all times (no negative balance per bucket).
@@ -39,7 +39,7 @@ All wallet balances are segmented into three buckets, debited in strict order:
 
 - Refunds are not supported as a reversal primitive.
 - VIP Refund Protocol: refunds are re-issued as promotional credits to bucket 1, NOT as cash reversals.
-- Chargeback disputes are handled by the chargeback package assembler — these are bank-initiated, not system-initiated refunds.
+- Chargeback disputes are handled by the chargeback package assembler — bank-initiated, not system-initiated.
 - No API endpoint may issue a cash refund. Any such endpoint is a critical defect.
 
 ## 5. Escrow & Hold Matrix
