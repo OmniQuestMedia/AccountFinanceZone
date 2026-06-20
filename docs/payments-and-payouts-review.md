@@ -302,42 +302,42 @@ it immutably_.** Policy in, ledger out.
 
 **Phase 2 — Atomicity & concurrency (P1).**
 
-5. Wrap each multi-step movement in `prisma.$transaction`: theatre settle
+1. Wrap each multi-step movement in `prisma.$transaction`: theatre settle
    (ledger + audit + status), payout settle (settlement + request status +
    ledger + audit).
-6. Add a partial unique index enforcing one active `PayoutRequest` per creator
+2. Add a partial unique index enforcing one active `PayoutRequest` per creator
    (status in PENDING/APPROVED/PROCESSING) to close C-2 at the DB layer.
-7. Add compensating-reversal logic (OFFSET entries) on theatre/payout failure
+3. Add compensating-reversal logic (OFFSET entries) on theatre/payout failure
    paths (C-4, F-3).
 
 **Phase 3 — Integration hardening (P1).**
 
-8. Implement a **transactional outbox** for finance events; relay to eCommsZone
+1. Implement a **transactional outbox** for finance events; relay to eCommsZone
    with retry + dead-letter (F-1).
-9. Replace the compliance stub with a real OmniComplianceZone call (timeout,
+2. Replace the compliance stub with a real OmniComplianceZone call (timeout,
    fail-closed) (F-4).
-10. Implement real Stripe charge + **webhook ingress** (signature-verified) so
-    chargebacks flow into `ChargebackService`; normalize to CAD/residency (§4
-    Stripe row, §3.2).
-11. Make NOWPayments settlement two-phase: create settlement `PENDING`, call
-    processor, advance to `SETTLED` only on confirmation, store the real
-    `external_ref` (F-2).
+3. Implement real Stripe charge + **webhook ingress** (signature-verified) so
+   chargebacks flow into `ChargebackService`; normalize to CAD/residency (§4
+   Stripe row, §3.2).
+4. Make NOWPayments settlement two-phase: create settlement `PENDING`, call
+   processor, advance to `SETTLED` only on confirmation, store the real
+   `external_ref` (F-2).
 
 **Phase 4 — Escrow & checkout (P1/P2).**
 
-12. Implement the Escrow/Hold matrix (`pending_hold`, `dispute_hold`,
-    `payout_reserve`) as ledger-backed locked balances with audited
-    lock/unlock events (Corpus §5).
-13. Implement Universal Checkout Confirmation as the precondition for any debit
-    (Corpus §8), using the existing `CheckoutConfirmation` type.
+1. Implement the Escrow/Hold matrix (`pending_hold`, `dispute_hold`,
+   `payout_reserve`) as ledger-backed locked balances with audited
+   lock/unlock events (Corpus §5).
+2. Implement Universal Checkout Confirmation as the precondition for any debit
+   (Corpus §8), using the existing `CheckoutConfirmation` type.
 
 **Phase 5 — Separation of concerns (P2).**
 
-14. Externalize revenue-share BPS and fan→creator linkage out of
-    `BillingService` per §6; fix the `BillingModule`→`PayoutsModule` wiring
-    defect (§4.1).
-15. Converge the two payout systems on the DB-backed model as the single
-    source of creator-owed balance (A-4).
+1. Externalize revenue-share BPS and fan→creator linkage out of
+   `BillingService` per §6; fix the `BillingModule`→`PayoutsModule` wiring
+   defect (§4.1).
+2. Converge the two payout systems on the DB-backed model as the single
+   source of creator-owed balance (A-4).
 
 ---
 
