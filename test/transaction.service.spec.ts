@@ -4,6 +4,7 @@ import { EventPublisher } from '../src/events/event.publisher';
 import { FraudService } from '../src/fraud/fraud.service';
 import { LedgerService } from '../src/ledger/ledger.service';
 import { TransactionService } from '../src/transactions/transaction.service';
+import { WalletService } from '../src/wallet/wallet.service';
 
 describe('TransactionService', () => {
   const createService = (ledgerService: LedgerService): TransactionService =>
@@ -12,6 +13,7 @@ describe('TransactionService', () => {
       ledgerService,
       new FraudService(),
       new EventPublisher(),
+      new WalletService(),
     );
 
   it('processes low-risk payments and appends a ledger entry', () => {
@@ -61,24 +63,67 @@ describe('TransactionService', () => {
     expect(ledgerService.listEntriesForAccount('acct_3')).toHaveLength(0);
   });
 
-  it('records refund and chargeback as append-only offset entries', () => {
+  it('rejects duplicate payment with the same idempotency key', () => {
+    const ledgerService = new LedgerService();
+    const service = createService(ledgerService);
+    const payload = {
+      accountId: 'acct_idem',
+      amountMinor: 1000n,
+      currency: 'CAD',
+      paymentTokenId: 'tok_idem',
+      accountAgeDays: 120,
+      velocityLastHour: 1,
+      context: { ruleAppliedId: 'rule_v1', auditTraceId: 'audit_idem', idempotencyKey: 'key_42' },
+    };
+    service.processPayment(payload);
+    expect(() => service.processPayment(payload)).toThrow('Duplicate payment rejected');
+    expect(ledgerService.listEntriesForAccount('acct_idem')).toHaveLength(1);
+  });
+
+  it('initiateRefund throws — cash refunds are prohibited', () => {
     const ledgerService = new LedgerService();
     const service = createService(ledgerService);
 
-    service.initiateRefund(
-      'txn_ref_1',
-      {
-        accountId: 'acct_offsets',
-        amountMinor: 900n,
-        currency: 'CAD',
-        paymentTokenId: 'tok_3',
-        context: {
-          ruleAppliedId: 'rule_refund_v1',
-          auditTraceId: 'audit_refund',
+    expect(() =>
+      service.initiateRefund(
+        'txn_ref_1',
+        {
+          accountId: 'acct_refund',
+          amountMinor: 500n,
+          currency: 'CAD',
+          paymentTokenId: 'tok_r',
+          context: { ruleAppliedId: 'rule_r', auditTraceId: 'audit_r' },
         },
-      },
-      'le_origin_1',
+        'le_1',
+      ),
+    ).toThrow('Cash refunds are prohibited');
+
+    expect(ledgerService.listEntriesForAccount('acct_refund')).toHaveLength(0);
+  });
+
+  it('issueVipRefundAsCredit appends a CREDIT ledger entry to the promotional bucket', () => {
+    const ledgerService = new LedgerService();
+    const service = createService(ledgerService);
+
+    const result = service.issueVipRefundAsCredit(
+      'acct_vip',
+      2000n,
+      'CAD',
+      { ruleAppliedId: 'rule_vip', auditTraceId: 'audit_vip' },
+      'VIP customer satisfaction credit',
     );
+
+    expect(result.creditId.startsWith('crd_')).toBe(true);
+    expect(result.bucket).toBe('promotional');
+    expect(result.amountMinor).toBe(2000n);
+    const entries = ledgerService.listEntriesForAccount('acct_vip');
+    expect(entries).toHaveLength(1);
+    expect(entries[0].entryType).toBe('CREDIT');
+  });
+
+  it('records chargeback as append-only offset entry', () => {
+    const ledgerService = new LedgerService();
+    const service = createService(ledgerService);
 
     service.registerChargeback(
       'txn_ref_1',
@@ -96,8 +141,7 @@ describe('TransactionService', () => {
     );
 
     const entries = ledgerService.listEntriesForAccount('acct_offsets');
-    expect(entries).toHaveLength(2);
+    expect(entries).toHaveLength(1);
     expect(entries[0].entryType).toBe('OFFSET');
-    expect(entries[1].entryType).toBe('OFFSET');
   });
 });
