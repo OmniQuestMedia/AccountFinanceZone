@@ -16,21 +16,24 @@ This repository implements and references OQMI infrastructure and security contr
 ## KMS Key Management
 
 ### Key Isolation
+
 - **Dedicated KMS Key**: Separate encryption key for AccountFinanceZone financial data
 - **Key Alias**: `alias/accountfinancezone-encryption-key`
 - **Region**: `ca-central-1` (Canadian data residency)
 - **Scope**: Encryption at rest for database and tokenized payment data
 
 ### Configuration
+
 Required environment variables:
+
 - `AWS_REGION=ca-central-1` (enforced at runtime)
 - `AWS_KMS_KEY_ID` (ARN of the KMS key)
 - `AWS_KMS_KEY_ALIAS=alias/accountfinancezone-encryption-key`
 - `DB_ENCRYPTION_ENABLED=true` (production requirement)
 
 ### Database Encryption
+
 - PostgreSQL 16 with pgcrypto extension enabled
 - Column-level encryption for sensitive tokenized data
 - Encryption at rest for all financial records
 - Automatic key rotation policy enforced at infrastructure level
-

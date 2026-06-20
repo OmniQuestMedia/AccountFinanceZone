@@ -8,6 +8,7 @@ This document provides the canonical pointer to the MaxZoneGPT master directives
 **Path:** `PROGRAM_CONTROL/DIRECTIVES/QUEUE/COPILOT-DROID-REINDOCTRINATION-MASTER.md`
 
 **Retrieval Command:**
+
 ```bash
 gh api repos/OmniQuestMediaInc/MaxZoneGPT/contents/PROGRAM_CONTROL/DIRECTIVES/QUEUE/COPILOT-DROID-REINDOCTRINATION-MASTER.md --jq '.content' | base64 -d
 ```
@@ -27,11 +28,13 @@ The local pointer to this master directive is maintained at:
 This repository implements the **Strict Droid Mode** execution pattern defined in the master directives, with the following key alignments:
 
 ### 1. Repository Role & Scope
+
 - **Bounded Context:** Finance-only (FIZ scope)
 - **Separation of Concerns:** Intentionally separated from AccountsZone (identity/profile)
 - **Financial Operations:** Ledger, payments, payouts, subscriptions, fraud detection, compliance
 
 ### 2. Governance Requirements
+
 All financial operations in this repository must comply with:
 
 - **Rule Application:** Every financial write requires `rule_applied_id` (documented in `OQMI_GOVERNANCE.md`)
@@ -42,13 +45,16 @@ All financial operations in this repository must comply with:
 - **Human Review:** Required for changes to `src/ledger/**` and `prisma/**`
 
 ### 3. Commit Standards
+
 Commits affecting financial state require dual prefixes:
+
 - **FIZ Prefix:** For finance-zone scope
 - **Domain Prefix:** Specific operation (e.g., `ledger`, `payout`, `transaction`)
 
 **Example:** `FIZ: ledger: Implement append-only entry creation with governance validation`
 
 ### 4. Infrastructure & Security Policy
+
 Implemented per `OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md`:
 
 - ✅ **Data Residency:** Canadian-only (runtime enforcement)
@@ -59,6 +65,7 @@ Implemented per `OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md`:
 - ✅ **Cross-Repo Events:** Webhook v1.1 contract with HMAC signing
 
 ### 5. Ship-Gate Requirements
+
 All PRs must pass the following gates before merge:
 
 - ✅ **CI Status:** All tests passing
@@ -84,10 +91,12 @@ As of Phase 4.4 completion, this repository implements:
 ### 7. Integration Points
 
 **Upstream Systems:**
+
 - AccountsZone (identity/profile data)
 - OmniComplianceZone (regulatory controls)
 
 **Downstream Systems:**
+
 - eCommsZone (event delivery via webhook)
 - OQMI Analytics Platforms (reporting)
 
@@ -96,13 +105,17 @@ As of Phase 4.4 completion, this repository implements:
 ## Operational Guidelines
 
 ### Fast Path (Auto-Merge Eligible)
+
 Changes that do NOT touch:
+
 - `src/ledger/**`
 - `prisma/**`
 - Financial state mutations
 
 ### Human Review Required
+
 Changes that touch:
+
 - Ledger service implementation
 - Database schema
 - Compliance logic
@@ -110,7 +123,9 @@ Changes that touch:
 - Audit trail implementation
 
 ### AI Agent Restrictions
+
 AI systems (including Copilot, Claude, etc.) operating in this repository:
+
 - ✅ **MAY:** Suggest changes, explain code, draft proposals
 - ❌ **MUST NOT:** Directly compute payout amounts
 - ❌ **MUST NOT:** Mutate ledger without governance context
@@ -119,9 +134,9 @@ AI systems (including Copilot, Claude, etc.) operating in this repository:
 
 ## Version History
 
-| Version | Date | Changes | Authority |
-|---------|------|---------|-----------|
-| 1.0 | 2026-05-26 | Initial MAXZONEGPT pointer with Phase 4.4 completion | Claude (Cowork) |
+| Version | Date       | Changes                                              | Authority       |
+| ------- | ---------- | ---------------------------------------------------- | --------------- |
+| 1.0     | 2026-05-26 | Initial MAXZONEGPT pointer with Phase 4.4 completion | Claude (Cowork) |
 
 ## Verification
 

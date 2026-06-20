@@ -16,6 +16,7 @@ This rule has **absolute highest priority** and overrides all other instructions
 It must be enforced on every future PR and every implementation phase.
 
 ## Additional Permanent Rules
+
 - Always follow OQMI Governance rules (append-only ledger, GateGuard, rule_applied_id, etc.).
 - Never break existing Safe Synthetic Twin or account-core functionality.
 - Reuse shared modules from `services/account-core` whenever possible.

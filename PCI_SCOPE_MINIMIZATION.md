@@ -120,6 +120,7 @@ The AccountFinanceZone implements a **token-only payment architecture** that min
 ### System Boundaries
 
 **In Scope (This Service):**
+
 - Payment token storage
 - Transaction processing logic
 - Ledger and audit trail
@@ -127,6 +128,7 @@ The AccountFinanceZone implements a **token-only payment architecture** that min
 - Compliance enforcement
 
 **Out of Scope (External):**
+
 - Card data collection (payment gateway frontend)
 - Tokenization (payment gateway API)
 - Raw PAN storage (payment vault)
@@ -138,17 +140,18 @@ The AccountFinanceZone implements a **token-only payment architecture** that min
 
 ### PaymentMethodToken Model
 
-| Field | Type | Example | Encrypted | PCI-Sensitive |
-|-------|------|---------|-----------|---------------|
-| `id` | cuid | `cuid_abc123` | ❌ No | ❌ No |
-| `accountId` | string | `acct_456` | ❌ No | ❌ No |
-| `provider` | string | `stripe` | ❌ No | ❌ No |
-| `providerToken` | string | `tok_1234abcd` | ✅ **Yes** | ⚠️ **Vault token** |
-| `tokenFingerprint` | string | `fp_sha256hash` | ✅ **Yes** | ❌ No |
-| `residencyRegion` | string | `CA` | ❌ No | ❌ No |
-| `createdAt` | DateTime | `2026-05-26T...` | ❌ No | ❌ No |
+| Field              | Type     | Example          | Encrypted  | PCI-Sensitive      |
+| ------------------ | -------- | ---------------- | ---------- | ------------------ |
+| `id`               | cuid     | `cuid_abc123`    | ❌ No      | ❌ No              |
+| `accountId`        | string   | `acct_456`       | ❌ No      | ❌ No              |
+| `provider`         | string   | `stripe`         | ❌ No      | ❌ No              |
+| `providerToken`    | string   | `tok_1234abcd`   | ✅ **Yes** | ⚠️ **Vault token** |
+| `tokenFingerprint` | string   | `fp_sha256hash`  | ✅ **Yes** | ❌ No              |
+| `residencyRegion`  | string   | `CA`             | ❌ No      | ❌ No              |
+| `createdAt`        | DateTime | `2026-05-26T...` | ❌ No      | ❌ No              |
 
 **Key Points:**
+
 - `providerToken` is an **opaque reference** to the payment gateway's vault
 - Even if exposed, `providerToken` cannot be used without gateway API credentials
 - `tokenFingerprint` is a one-way hash for identifying duplicate cards (not reversible)
@@ -156,18 +159,18 @@ The AccountFinanceZone implements a **token-only payment architecture** that min
 
 ### Transaction Model
 
-| Field | Type | PCI-Sensitive |
-|-------|------|---------------|
-| `id` | cuid | ❌ No |
-| `accountId` | string | ❌ No |
-| `type` | enum | ❌ No |
-| `amountMinor` | BigInt | ❌ No |
-| `currency` | string | ❌ No |
+| Field            | Type        | PCI-Sensitive                        |
+| ---------------- | ----------- | ------------------------------------ |
+| `id`             | cuid        | ❌ No                                |
+| `accountId`      | string      | ❌ No                                |
+| `type`           | enum        | ❌ No                                |
+| `amountMinor`    | BigInt      | ❌ No                                |
+| `currency`       | string      | ❌ No                                |
 | `paymentTokenId` | string (FK) | ❌ No (links to token, not raw card) |
-| `status` | string | ❌ No |
-| `riskScore` | int | ❌ No |
-| `ruleAppliedId` | string | ❌ No |
-| `createdAt` | DateTime | ❌ No |
+| `status`         | string      | ❌ No                                |
+| `riskScore`      | int         | ❌ No                                |
+| `ruleAppliedId`  | string      | ❌ No                                |
+| `createdAt`      | DateTime    | ❌ No                                |
 
 **Key Point:** Transactions reference payment tokens via `paymentTokenId` foreign key, maintaining separation from raw card data.
 
@@ -179,22 +182,24 @@ The following data is **NEVER** stored in AccountFinanceZone:
 
 ### Prohibited Data (PCI-DSS Requirements)
 
-| Data Element | Storage Allowed | Our Implementation |
-|--------------|-----------------|-------------------|
+| Data Element                     | Storage Allowed             | Our Implementation    |
+| -------------------------------- | --------------------------- | --------------------- |
 | **Primary Account Number (PAN)** | ❌ Not without tokenization | ✅ **Only tokenized** |
-| **Full Magnetic Stripe Data** | ❌ Never | ✅ **Never stored** |
-| **CAV2/CVC2/CVV2/CID** | ❌ Never | ✅ **Never stored** |
-| **PIN/PIN Block** | ❌ Never | ✅ **Never stored** |
-| **Cardholder Name** | ⚠️ Only if needed | ✅ **Not stored** |
-| **Expiration Date** | ⚠️ Only if needed | ✅ **Not stored** |
-| **Service Code** | ⚠️ Only if needed | ✅ **Not stored** |
+| **Full Magnetic Stripe Data**    | ❌ Never                    | ✅ **Never stored**   |
+| **CAV2/CVC2/CVV2/CID**           | ❌ Never                    | ✅ **Never stored**   |
+| **PIN/PIN Block**                | ❌ Never                    | ✅ **Never stored**   |
+| **Cardholder Name**              | ⚠️ Only if needed           | ✅ **Not stored**     |
+| **Expiration Date**              | ⚠️ Only if needed           | ✅ **Not stored**     |
+| **Service Code**                 | ⚠️ Only if needed           | ✅ **Not stored**     |
 
 ### Why This Matters
 
 According to PCI-DSS Requirement 3.2:
+
 > "Do not store sensitive authentication data after authorization (even if encrypted)."
 
 By **never receiving or storing** this data, we:
+
 1. ✅ Cannot violate PCI-DSS 3.2 (impossible to store what we never receive)
 2. ✅ Eliminate data breach risk for cardholder data
 3. ✅ Reduce compliance scope to token management only
@@ -217,9 +222,10 @@ By **never receiving or storing** this data, we:
   - `PaymentMethodToken.tokenFingerprint`
 
 **Example:**
+
 ```typescript
 // Encrypted storage format: iv:authTag:encryptedData (base64)
-providerToken: "Ax7k...==:Bk2m...==:Cn3p...=="
+providerToken: 'Ax7k...==:Bk2m...==:Cn3p...==';
 ```
 
 **Key Rotation:** Master keys must be rotated per PCI-DSS requirements (annually or when compromised).
@@ -234,11 +240,13 @@ providerToken: "Ax7k...==:Bk2m...==:Cn3p...=="
 ### 5.3 Access Controls
 
 **Principle of Least Privilege:**
+
 - Database: Read-only access for reporting systems
 - Application: Service accounts with minimal IAM permissions
 - API: Authentication required for all endpoints (deployment-level)
 
 **Compliance Pre-Check:**
+
 ```typescript
 // src/compliance/compliance.guard.ts
 assertMoneyMovementAllowed({
@@ -253,6 +261,7 @@ assertMoneyMovementAllowed({
 **Requirement:** Canadian data residency only (per `OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md`)
 
 **Enforcement Points:**
+
 1. **Deployment:** `DATA_RESIDENCY_REGION: ca-central-1` (docker-compose.yaml)
 2. **Runtime:** ComplianceGuard rejects non-CA accounts
 3. **Database:** PostgreSQL hosted in Canadian region
@@ -265,26 +274,27 @@ assertMoneyMovementAllowed({
 
 ### PCI-DSS Requirements Mapping
 
-| Requirement | Status | Implementation |
-|-------------|--------|----------------|
-| **Req 1:** Firewall protection | ✅ Managed | Deployment-level network segmentation |
-| **Req 2:** No vendor defaults | ✅ Compliant | All secrets environment-based |
-| **Req 3:** Protect stored data | ✅ Compliant | AES-256-GCM encryption, token-only |
-| **Req 4:** Encrypt transmissions | ✅ Compliant | TLS 1.2+ enforced |
-| **Req 5:** Anti-malware | ✅ Managed | Host-level AV (infrastructure) |
-| **Req 6:** Secure systems | ✅ Compliant | CI/CD with security linting |
-| **Req 7:** Restrict access | ✅ Compliant | Least-privilege IAM |
-| **Req 8:** Identify users | ✅ Managed | Service-to-service auth |
-| **Req 9:** Physical access | ✅ Managed | Cloud provider (AWS/Azure) |
-| **Req 10:** Track/monitor | ✅ Compliant | Immutable AuditTrail model |
-| **Req 11:** Security testing | ✅ Compliant | CI tests, ship-gate verifier |
-| **Req 12:** Security policy | ✅ Compliant | OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md |
+| Requirement                      | Status       | Implementation                             |
+| -------------------------------- | ------------ | ------------------------------------------ |
+| **Req 1:** Firewall protection   | ✅ Managed   | Deployment-level network segmentation      |
+| **Req 2:** No vendor defaults    | ✅ Compliant | All secrets environment-based              |
+| **Req 3:** Protect stored data   | ✅ Compliant | AES-256-GCM encryption, token-only         |
+| **Req 4:** Encrypt transmissions | ✅ Compliant | TLS 1.2+ enforced                          |
+| **Req 5:** Anti-malware          | ✅ Managed   | Host-level AV (infrastructure)             |
+| **Req 6:** Secure systems        | ✅ Compliant | CI/CD with security linting                |
+| **Req 7:** Restrict access       | ✅ Compliant | Least-privilege IAM                        |
+| **Req 8:** Identify users        | ✅ Managed   | Service-to-service auth                    |
+| **Req 9:** Physical access       | ✅ Managed   | Cloud provider (AWS/Azure)                 |
+| **Req 10:** Track/monitor        | ✅ Compliant | Immutable AuditTrail model                 |
+| **Req 11:** Security testing     | ✅ Compliant | CI tests, ship-gate verifier               |
+| **Req 12:** Security policy      | ✅ Compliant | OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md |
 
 ### SAQ A-EP Eligibility
 
 This service qualifies for **SAQ A-EP** (E-commerce with fully outsourced payment processing):
 
 **Criteria:**
+
 - ✅ Payment page hosted by third party (payment gateway)
 - ✅ Merchant does not receive cardholder data
 - ✅ No electronic storage of cardholder data
@@ -332,6 +342,7 @@ All financial operations are logged to the immutable `AuditTrail` model:
 ### 7.3 Monitoring & Alerting
 
 **Recommended Alerts:**
+
 - Unusual number of failed transactions (fraud attempt)
 - Encryption errors (key management issue)
 - Compliance guard violations (policy breach)
@@ -347,6 +358,7 @@ All financial operations are logged to the immutable `AuditTrail` model:
 **Location:** `src/common/encryption.service.ts`
 
 **Features:**
+
 - AES-256-GCM authenticated encryption
 - Random IV per encryption (prevents pattern analysis)
 - Authentication tag verification (tamper detection)
@@ -356,16 +368,19 @@ All financial operations are logged to the immutable `AuditTrail` model:
 ### 8.2 Key Management
 
 **Current (Development):**
+
 ```bash
 ENCRYPTION_MASTER_KEY=<64-char-random-string>
 ```
 
 **Production (Recommended):**
+
 - AWS KMS: Managed keys with automatic rotation
 - Azure Key Vault: HSM-backed keys
 - Google Cloud KMS: Customer-managed encryption keys
 
 **Key Rotation Procedure:**
+
 1. Generate new master key in KMS
 2. Re-encrypt all `PaymentMethodToken` records with new key
 3. Update `ENCRYPTION_MASTER_KEY` environment variable
@@ -376,10 +391,10 @@ ENCRYPTION_MASTER_KEY=<64-char-random-string>
 
 ```typescript
 // Before storage (plaintext)
-providerToken: "tok_stripe_1234567890abcdef"
+providerToken: 'tok_stripe_1234567890abcdef';
 
 // After encryption (stored in DB)
-providerToken: "Ax7k2m==:Bk3p9n==:Cn4q1r=="
+providerToken: 'Ax7k2m==:Bk3p9n==:Cn4q1r==';
 //              ^^^^^^^^ ^^^^^^^^ ^^^^^^^^
 //                IV     AuthTag  Encrypted
 ```
@@ -390,7 +405,7 @@ For duplicate detection without storing plaintext:
 
 ```typescript
 // One-way hash for lookup
-tokenFingerprint: hash("tok_stripe_1234567890abcdef")
+tokenFingerprint: hash('tok_stripe_1234567890abcdef');
 // Result: "a3f2...b7c9" (SHA-256, non-reversible)
 ```
 
@@ -402,23 +417,25 @@ tokenFingerprint: hash("tok_stripe_1234567890abcdef")
 
 ### Retention Policy
 
-| Data Type | Minimum Retention | Our Policy | Reason |
-|-----------|-------------------|------------|---------|
-| **Payment Tokens** | Until card expires | 5 years | Active subscriptions |
-| **Transaction Records** | 7 years (tax law) | 7 years | Financial compliance |
-| **Audit Trail** | 1 year (PCI-DSS) | 7 years | Legal protection |
-| **Ledger Entries** | Indefinite | Indefinite | Immutable record |
-| **Fraud Assessments** | 1 year | 3 years | Pattern analysis |
+| Data Type               | Minimum Retention  | Our Policy | Reason               |
+| ----------------------- | ------------------ | ---------- | -------------------- |
+| **Payment Tokens**      | Until card expires | 5 years    | Active subscriptions |
+| **Transaction Records** | 7 years (tax law)  | 7 years    | Financial compliance |
+| **Audit Trail**         | 1 year (PCI-DSS)   | 7 years    | Legal protection     |
+| **Ledger Entries**      | Indefinite         | Indefinite | Immutable record     |
+| **Fraud Assessments**   | 1 year             | 3 years    | Pattern analysis     |
 
 ### Deletion Procedures
 
 **When customer closes account:**
+
 1. Mark payment tokens as `deleted` (soft delete)
 2. Encrypt deletion in `AuditTrail`
 3. Retain financial records per legal requirements
 4. Physical deletion after retention period expires
 
 **Never Delete:**
+
 - Ledger entries (append-only, immutable)
 - Audit trail (compliance requirement)
 - Transaction history (tax/legal requirement)
@@ -429,28 +446,29 @@ tokenFingerprint: hash("tok_stripe_1234567890abcdef")
 
 ### Threats Mitigated
 
-| Threat | Mitigation | Status |
-|--------|------------|--------|
-| **Card data breach** | Token-only architecture | ✅ Eliminated |
-| **Man-in-the-middle** | TLS 1.2+ enforcement | ✅ Mitigated |
-| **SQL injection** | Prisma ORM parameterized queries | ✅ Mitigated |
-| **Token theft** | Encryption at rest + access controls | ✅ Mitigated |
-| **Insider threat** | Least privilege + audit logging | ✅ Mitigated |
-| **Fraud** | Risk scoring + compliance gates | ✅ Mitigated |
-| **Unauthorized region** | Canadian-only enforcement | ✅ Mitigated |
+| Threat                  | Mitigation                           | Status        |
+| ----------------------- | ------------------------------------ | ------------- |
+| **Card data breach**    | Token-only architecture              | ✅ Eliminated |
+| **Man-in-the-middle**   | TLS 1.2+ enforcement                 | ✅ Mitigated  |
+| **SQL injection**       | Prisma ORM parameterized queries     | ✅ Mitigated  |
+| **Token theft**         | Encryption at rest + access controls | ✅ Mitigated  |
+| **Insider threat**      | Least privilege + audit logging      | ✅ Mitigated  |
+| **Fraud**               | Risk scoring + compliance gates      | ✅ Mitigated  |
+| **Unauthorized region** | Canadian-only enforcement            | ✅ Mitigated  |
 
 ### Residual Risks
 
-| Risk | Likelihood | Impact | Mitigation Plan |
-|------|------------|--------|-----------------|
-| **KMS key compromise** | Low | High | Key rotation + monitoring |
-| **Payment gateway breach** | Low | High | Vendor diversification |
-| **Database dump** | Low | Medium | Encryption at rest |
-| **Logic bug (overpayment)** | Medium | High | Governance rules + human review |
+| Risk                        | Likelihood | Impact | Mitigation Plan                 |
+| --------------------------- | ---------- | ------ | ------------------------------- |
+| **KMS key compromise**      | Low        | High   | Key rotation + monitoring       |
+| **Payment gateway breach**  | Low        | High   | Vendor diversification          |
+| **Database dump**           | Low        | Medium | Encryption at rest              |
+| **Logic bug (overpayment)** | Medium     | High   | Governance rules + human review |
 
 ### Incident Response
 
 **If payment token exposure suspected:**
+
 1. Rotate KMS keys immediately
 2. Invalidate exposed tokens via payment gateway API
 3. Notify affected customers
@@ -496,9 +514,9 @@ Use this checklist to verify PCI scope minimization:
 
 ## Document Control
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2026-05-26 | Claude (Cowork) | Initial documentation for Phase 4.4 |
+| Version | Date       | Author          | Changes                             |
+| ------- | ---------- | --------------- | ----------------------------------- |
+| 1.0     | 2026-05-26 | Claude (Cowork) | Initial documentation for Phase 4.4 |
 
 **Next Review:** 2027-05-26 or upon major architecture change
 
@@ -509,6 +527,7 @@ Use this checklist to verify PCI scope minimization:
 **Questions or Concerns?**
 
 For PCI compliance questions, consult with:
+
 - Qualified Security Assessor (QSA)
 - Payment gateway support team
 - OQMI Infrastructure & Security team

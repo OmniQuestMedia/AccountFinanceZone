@@ -1,11 +1,13 @@
 # Phase 4.1 Implementation: Project Setup & Schema Foundation
 
 ## Overview
+
 This document describes the implementation of Phase 4.1 for AccountFinanceZone, establishing the foundation for a separate financial service with strict security separation.
 
 ## Goals Achieved ✅
 
 ### 1. Node.js/TypeScript Project Initialization ✅
+
 - **Framework**: NestJS 11.1.19
 - **Runtime**: Node.js 22
 - **Language**: TypeScript 5.7.2 with strict mode
@@ -14,12 +16,14 @@ This document describes the implementation of Phase 4.1 for AccountFinanceZone, 
 - **Module System**: ES2021 target with decorator support
 
 **Configuration Files:**
+
 - `package.json` - Dependencies and scripts
 - `tsconfig.json` - Strict TypeScript configuration
 - `tsconfig.build.json` - Production build settings
 - `jest.config.ts` - Test configuration
 
 **Scripts:**
+
 - `npm install` - Install dependencies
 - `npm run build` - Compile TypeScript
 - `npm run lint` - Type checking
@@ -28,6 +32,7 @@ This document describes the implementation of Phase 4.1 for AccountFinanceZone, 
 - `npm run ship-gate` - Governance validation
 
 ### 2. Separate PostgreSQL Instance via Docker ✅
+
 - **Image**: PostgreSQL 16
 - **Service Name**: `postgres`
 - **Database**: `accounts_finance_zone`
@@ -37,16 +42,19 @@ This document describes the implementation of Phase 4.1 for AccountFinanceZone, 
 - **Data Persistence**: Named volume (`postgres_data`)
 
 **Configuration:**
+
 - `docker-compose.yml` - Service orchestration
 - `prisma/init-db.sql` - Database initialization script
 - `.dockerignore` - Docker build optimization
 - `Dockerfile` - Multi-stage production build
 
 **Database Extensions:**
+
 - `pgcrypto` - Encryption functions for sensitive data
 - `uuid-ossp` - UUID generation support
 
 ### 3. Schema Design (Tokenized Data Only) ✅
+
 **Schema File**: `prisma/schema.prisma`
 
 **Key Design Principles:**
@@ -93,12 +101,14 @@ This document describes the implementation of Phase 4.1 for AccountFinanceZone, 
    - Required for compliance
 
 **Indexes:**
+
 - Optimized for queries by account, creation date, and rule ID
 - Supports efficient ledger queries and audit trail searches
 
 ### 4. Separate KMS Key Configuration ✅
 
 **KMS Module**: `src/kms/`
+
 - `kms-config.service.ts` - Configuration service
 - `kms.module.ts` - Global module
 
@@ -110,6 +120,7 @@ This document describes the implementation of Phase 4.1 for AccountFinanceZone, 
 ✅ **Configuration Summary** - Secure logging (no key exposure)
 
 **Environment Variables:**
+
 ```bash
 AWS_REGION=ca-central-1                          # Enforced
 AWS_KMS_KEY_ID=arn:aws:kms:ca-central-1:...     # KMS key ARN
@@ -118,12 +129,14 @@ DB_ENCRYPTION_ENABLED=true                       # Required in production
 ```
 
 **Security Validation:**
+
 - ✅ Region must be `ca-central-1`
 - ✅ KMS key ID required in production
 - ✅ Encryption must be enabled in production
 - ✅ Configuration validated on startup
 
 **Tests:**
+
 - `test/kms-config.service.spec.ts` - 21 tests passing
 - Validates region enforcement
 - Tests production readiness checks
@@ -132,6 +145,7 @@ DB_ENCRYPTION_ENABLED=true                       # Required in production
 ## Success Criteria ✅
 
 ### ✅ Database Ready with Strong Encryption
+
 - PostgreSQL 16 configured with pgcrypto extension
 - KMS key configuration enforced
 - Encryption at rest enabled via AWS KMS
@@ -140,6 +154,7 @@ DB_ENCRYPTION_ENABLED=true                       # Required in production
 - Canadian data residency enforced at runtime
 
 ### ✅ Schema Contains Only Tokenized Data
+
 - `PaymentMethodToken` model uses provider tokens
 - NO raw PAN, CVV, or sensitive card data
 - PCI-DSS compliant separation of duties
@@ -147,6 +162,7 @@ DB_ENCRYPTION_ENABLED=true                       # Required in production
 - All payment data is tokenized before storage
 
 ### ✅ Node.js/TypeScript Project Fully Initialized
+
 - All dependencies installed and compatible
 - Build system configured and tested
 - Tests passing (21 tests, 5 test suites)
@@ -154,6 +170,7 @@ DB_ENCRYPTION_ENABLED=true                       # Required in production
 - CI/CD pipeline ready
 
 ### ✅ Separate PostgreSQL Instance via Docker
+
 - Dedicated database service
 - Isolated from other services
 - Volume persistence configured
@@ -232,18 +249,21 @@ AccountFinanceZone/
 ## Next Steps (Future Phases)
 
 ### Phase 4.2: Payment Processing Integration
+
 - Integrate with payment provider vault for tokenization
 - Implement payment method token creation/validation
 - Add webhook handlers for payment events
 - Implement transaction processing workflows
 
 ### Phase 4.3: KMS Integration Enhancement
+
 - Add AWS SDK for KMS client operations
 - Implement encryption/decryption utilities
 - Add key rotation automation
 - Implement envelope encryption for large data
 
 ### Phase 4.4: Production Deployment
+
 - Deploy to AWS infrastructure (ca-central-1)
 - Configure production KMS keys
 - Set up monitoring and alerting
@@ -252,24 +272,28 @@ AccountFinanceZone/
 ## Compliance & Security Notes
 
 ### ✅ Canadian Data Residency
+
 - All services deployed in `ca-central-1` region
 - KMS keys restricted to Canadian region
 - Runtime validation enforces region constraints
 - Database and application servers in same region
 
 ### ✅ PCI-DSS Compliance
+
 - No raw card data stored anywhere
 - Only tokenized payment references
 - Separation of duties enforced
 - Payment vault integration point designed
 
 ### ✅ Encryption at Rest
+
 - PostgreSQL with pgcrypto extension
 - AWS KMS key management
 - Separate encryption key per service
 - Automatic key rotation capability
 
 ### ✅ Audit & Governance
+
 - Immutable audit trail for all financial actions
 - `rule_applied_id` required on every write
 - Append-only ledger with offset entries
@@ -278,12 +302,14 @@ AccountFinanceZone/
 ## Testing & Validation
 
 All tests passing:
+
 ```
 Test Suites: 5 passed, 5 total
 Tests:       21 passed, 21 total
 ```
 
 **Test Coverage:**
+
 - KMS configuration validation (9 tests)
 - Transaction service integration (4 tests)
 - Ledger service append-only (3 tests)
@@ -291,6 +317,7 @@ Tests:       21 passed, 21 total
 - eComms zone webhook client (3 tests)
 
 **Build Validation:**
+
 - TypeScript compilation: ✅ PASS
 - Type checking: ✅ PASS
 - Test suite: ✅ PASS
