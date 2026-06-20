@@ -121,16 +121,16 @@ build pass.
 
 ## 5. Ledger Integrity Health Summary
 
-| Dimension                   | Before                         | After this change                     | Residual risk                           |
-| --------------------------- | ------------------------------ | ------------------------------------- | --------------------------------------- |
-| Append-only enforced        | Convention only                | **Runtime-frozen + hash chain**       | Gone (in-memory); DB grants pending T-1 |
-| Tamper-evident              | ❌ None                        | ✅ sha256 chain + `verifyIntegrity()` | None in-memory                          |
-| `rule_applied_id`           | ✅ Required                    | ✅ Required                           | None                                    |
-| `correlation_id` on ledger  | ❌ Absent                      | ✅ Threaded & persisted-on-entry      | DB persistence pending T-1              |
-| Input validation            | Minimal                        | ✅ Amount/currency/offset/account     | None                                    |
-| Durable persistence         | ❌ In-memory                   | ❌ In-memory                          | **Critical — T-1**                      |
-| Double-spend / idempotency  | ❌ In-memory, mis-ordered      | ❌ Unchanged                          | **Critical — T-2**                      |
-| Atomic write + events       | ❌ Non-atomic, fire-and-forget | ❌ Unchanged                          | **High — T-4**                          |
+| Dimension                    | Before                         | After this change                     | Residual risk                           |
+| ---------------------------- | ------------------------------ | ------------------------------------- | --------------------------------------- |
+| Append-only enforced         | Convention only                | **Runtime-frozen + hash chain**       | Gone (in-memory); DB grants pending T-1 |
+| Tamper-evident               | ❌ None                        | ✅ sha256 chain + `verifyIntegrity()` | None in-memory                          |
+| `rule_applied_id`            | ✅ Required                    | ✅ Required                           | None                                    |
+| `correlation_id` on ledger   | ❌ Absent                      | ✅ Threaded & persisted-on-entry      | DB persistence pending T-1              |
+| Input validation             | Minimal                        | ✅ Amount/currency/offset/account     | None                                    |
+| Durable persistence          | ❌ In-memory                   | ❌ In-memory                          | **Critical — T-1**                      |
+| Double-spend / idempotency   | ❌ In-memory, mis-ordered      | ❌ Unchanged                          | **Critical — T-2**                      |
+| Atomic write + events        | ❌ Non-atomic, fire-and-forget | ❌ Unchanged                          | **High — T-4**                          |
 | Ledger ↔ loyalty separation | Mostly clean                   | Clean at core; orchestration noted    | Medium — T-6                            |
 
 **Overall:** 🟡 **Yellow — improving, not yet migration-ready.** The ledger is
