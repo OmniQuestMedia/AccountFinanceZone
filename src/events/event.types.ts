@@ -8,7 +8,8 @@ export type FinanceEventType =
   | 'FraudFlagRaised'
   | 'payout.requested'
   | 'payout.settled'
-  | 'theatre.block.settled';
+  | 'theatre.block.settled'
+  | 'PromotionalCreditIssued';
 
 export interface FinanceEvent<TPayload = Record<string, unknown>> {
   type: FinanceEventType;
