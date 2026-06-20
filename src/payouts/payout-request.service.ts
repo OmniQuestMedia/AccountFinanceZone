@@ -5,18 +5,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EventPublisher } from '../events/event.publisher';
+import { isValidPayoutMethod } from './payout-methods';
 import { randomUUID } from 'crypto';
 
 const MINIMUM_PAYOUT_CENTS = 5000; // $50.00 CAD
 const RULE_APPLIED_ID = 'GOVERNANCE-EQ-v1';
-
-const VALID_PAYOUT_METHODS = new Set([
-  'DIRECT_DEPOSIT',
-  'E_TRANSFER',
-  'WIRE_TRANSFER',
-  'CHECK_BY_MAIL',
-  'CRYPTO_NOWPAYMENTS',
-]);
 
 export interface SubmitPayoutRequestInput {
   creatorId: string;
@@ -42,7 +35,7 @@ export class PayoutRequestService {
       );
     }
 
-    if (!VALID_PAYOUT_METHODS.has(input.method)) {
+    if (!isValidPayoutMethod(input.method)) {
       throw new BadRequestException(`Invalid payout method: ${input.method}`);
     }
 

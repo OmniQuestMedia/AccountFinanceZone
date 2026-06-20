@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { createHmac } from 'crypto';
 import { ECommsZoneClient } from '../src/events/ecomms-zone.client';
 
@@ -91,6 +92,77 @@ describe('ECommsZoneClient', () => {
       (request.headers as Record<string, string>)['x-oqmi-signature-sha256'],
     ).toBe(
       `sha256=${createHmac('sha256', 'shared-secret').update(body).digest('hex')}`,
+    );
+  });
+
+  it('omits the signature header when no shared secret is configured', async () => {
+    process.env.ECOMMSZONE_WEBHOOK_URL = 'https://example.com/ecomms';
+    delete process.env.ECOMMSZONE_WEBHOOK_SECRET;
+
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 202 });
+    global.fetch = fetchMock as typeof fetch;
+
+    const client = new ECommsZoneClient();
+    await client.publishFinanceEvent({
+      type: 'PaymentProcessed',
+      aggregateId: 'txn_3',
+      payload: { accountId: 'acct_3' },
+      emittedAt: '2026-05-13T00:00:00.000Z',
+    });
+
+    const [, request] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(
+      (request.headers as Record<string, string>)['x-oqmi-signature-sha256'],
+    ).toBeUndefined();
+  });
+
+  it('warns but does not throw when the webhook returns a non-2xx status', async () => {
+    process.env.ECOMMSZONE_WEBHOOK_URL = 'https://example.com/ecomms';
+    delete process.env.ECOMMSZONE_WEBHOOK_SECRET;
+
+    const fetchMock = jest.fn().mockResolvedValue({ ok: false, status: 500 });
+    global.fetch = fetchMock as typeof fetch;
+    const warnSpy = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+
+    const client = new ECommsZoneClient();
+    await expect(
+      client.publishFinanceEvent({
+        type: 'PaymentProcessed',
+        aggregateId: 'txn_4',
+        payload: { accountId: 'acct_4' },
+        emittedAt: '2026-05-13T00:00:00.000Z',
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('returned 500'),
+    );
+  });
+
+  it('swallows fetch errors so finance writes are never blocked by delivery failures', async () => {
+    process.env.ECOMMSZONE_WEBHOOK_URL = 'https://example.com/ecomms';
+    delete process.env.ECOMMSZONE_WEBHOOK_SECRET;
+
+    const fetchMock = jest.fn().mockRejectedValue(new Error('network down'));
+    global.fetch = fetchMock as typeof fetch;
+    const warnSpy = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+
+    const client = new ECommsZoneClient();
+    await expect(
+      client.publishFinanceEvent({
+        type: 'PaymentProcessed',
+        aggregateId: 'txn_5',
+        payload: { accountId: 'acct_5' },
+        emittedAt: '2026-05-13T00:00:00.000Z',
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('network down'),
     );
   });
 });

@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { PayoutRequestService } from '../src/payouts/payout-request.service';
 
 const mockPublisher = { publish: jest.fn() };
@@ -72,6 +72,58 @@ describe('PayoutRequestService', () => {
     expect(result).toMatchObject({ amount_cents: 7500, currency: 'CAD' });
     expect(publisher.publish).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'payout.requested' }),
+    );
+  });
+
+  it('lists payout requests for a creator newest-first', async () => {
+    const findMany = jest
+      .fn()
+      .mockResolvedValue([{ id: 'req-2' }, { id: 'req-1' }]);
+    const prisma = { payoutRequest: { findMany } };
+    const service = new PayoutRequestService(
+      prisma as never,
+      mockPublisher as never,
+    );
+
+    const result = await service.listByCreator('c1');
+
+    expect(findMany).toHaveBeenCalledWith({
+      where: { creator_id: 'c1' },
+      orderBy: { created_at: 'desc' },
+    });
+    expect(result).toHaveLength(2);
+  });
+
+  it('returns a single payout request scoped to the creator', async () => {
+    const findFirst = jest
+      .fn()
+      .mockResolvedValue({ id: 'req-1', settlements: [] });
+    const prisma = { payoutRequest: { findFirst } };
+    const service = new PayoutRequestService(
+      prisma as never,
+      mockPublisher as never,
+    );
+
+    const result = await service.getById('req-1', 'c1');
+
+    expect(findFirst).toHaveBeenCalledWith({
+      where: { id: 'req-1', creator_id: 'c1' },
+      include: { settlements: true },
+    });
+    expect(result).toMatchObject({ id: 'req-1' });
+  });
+
+  it('throws NotFoundException when the request is not owned by the creator', async () => {
+    const prisma = {
+      payoutRequest: { findFirst: jest.fn().mockResolvedValue(null) },
+    };
+    const service = new PayoutRequestService(
+      prisma as never,
+      mockPublisher as never,
+    );
+
+    await expect(service.getById('req-1', 'someone-else')).rejects.toThrow(
+      NotFoundException,
     );
   });
 });

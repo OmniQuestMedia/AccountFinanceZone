@@ -79,6 +79,33 @@ describe('PayoutSettlementService', () => {
     }
   });
 
+  it('falls back to a manual queue for crypto payouts when no API key is configured', async () => {
+    const prisma = makePrisma(makeRequest());
+    (prisma.payoutRequest.findUniqueOrThrow as jest.Mock).mockResolvedValue({
+      ...makeRequest(),
+      method: 'CRYPTO_NOWPAYMENTS',
+    });
+    const publisher = { publish: jest.fn() };
+    const service = new PayoutSettlementService(prisma as never, publisher as never);
+
+    const origNowKey = process.env.NOWPAYMENTS_API_KEY;
+    delete process.env.NOWPAYMENTS_API_KEY;
+
+    await service.processPayoutRequest('req-1');
+
+    // No external key => no SETTLED transition, queued as PENDING_MANUAL instead
+    expect(prisma.payoutSettlement.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ status: 'PENDING_MANUAL' }),
+      }),
+    );
+    expect(publisher.publish).not.toHaveBeenCalled();
+
+    if (origNowKey !== undefined) {
+      process.env.NOWPAYMENTS_API_KEY = origNowKey;
+    }
+  });
+
   it('advances request status to SETTLED after NOWPayments stub', async () => {
     const prisma = makePrisma(makeRequest());
     (prisma.payoutRequest.findUniqueOrThrow as jest.Mock).mockResolvedValue(

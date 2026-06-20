@@ -2,15 +2,8 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { EncryptionService } from '../common/encryption.service';
+import { isValidPayoutMethod } from './payout-methods';
 import { randomUUID } from 'crypto';
-
-const VALID_PAYOUT_METHODS = new Set([
-  'DIRECT_DEPOSIT',
-  'E_TRANSFER',
-  'WIRE_TRANSFER',
-  'CHECK_BY_MAIL',
-  'CRYPTO_NOWPAYMENTS',
-]);
 
 export interface SetPayoutPreferenceInput {
   creatorId: string;
@@ -30,7 +23,7 @@ export class CreatorPayoutPreferenceService {
   ) {}
 
   async upsert(input: SetPayoutPreferenceInput) {
-    if (!VALID_PAYOUT_METHODS.has(input.preferredMethod)) {
+    if (!isValidPayoutMethod(input.preferredMethod)) {
       throw new BadRequestException(
         `Invalid preferredMethod: ${input.preferredMethod}`,
       );
