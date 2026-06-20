@@ -7,28 +7,20 @@
 - Feature branches are deleted after merge.
 - Branches older than 30 days with no active PR are candidates for deletion.
 
-## Stale Branches Identified (2026-06-18 audit)
+## Stale Branches Identified (2026-06-20 audit)
 
-The following branches were identified as stale (no active PR, older than 30 days or clearly superseded).
-Manual deletion required via GitHub UI or `git push origin --delete <branch>`:
+Live remote audit. The prior 2026-06-18 list is superseded — 12 of the 15
+branches it named have already been deleted from the remote. Remaining
+candidates (manual deletion via GitHub UI or `git push origin --delete <branch>`):
 
-```text
-agent/cowork-orch-2026-05-19-droid-rollout
-claude/add-copilot-instructions-file
-claude/add-revenue-share-ledger
-claude/ci-fix-yarn-install-errors
-claude/cleanup-mission-linter-code-quality
-claude/cleanup-prompts
-claude/copilot-review-fixes
-claude/final-homestretch-cleanup
-claude/hygiene-fixes
-claude/peaceful-hypatia-jz3Md
-claude/phase-4-4-security-testing-finalization
-claude/restore-full-codebase
-copilot/cleanup-governance-sync
-copilot/run-hygiene-audit
-feature/playbooks-reference-v1
-```
+| Branch | Last commit | Merged into `main`? | Recommendation |
+| --- | --- | --- | --- |
+| `claude/jolly-turing-thakuh` | 2026-06-20 | Yes (PR #25) | Safe to delete |
+| `copilot/run-hygiene-audit` | 2026-06-04 | Yes | Safe to delete |
+| `claude/cleanup-prompts` | 2026-05-26 | No | Stale (~25d) — review then delete |
+| `claude/ci-fix-yarn-install-errors` | 2026-05-24 | No | Stale (~27d) — review then delete |
+| `claude/restore-full-codebase` | 2026-06-20 | No | Recent — keep for now |
+| `ledger-hardening` | 2026-06-19 | No | Superseded by merged ledger-hardening commit on `main`; verify then delete |
 
 ## To Enable Branch Protection (Manual Step)
 

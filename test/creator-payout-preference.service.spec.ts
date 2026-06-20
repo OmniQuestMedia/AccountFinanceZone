@@ -97,6 +97,40 @@ describe('CreatorPayoutPreferenceService', () => {
     expect(result.mailing_address).toBeNull();
   });
 
+  it('decrypts encrypted JSON fields on read', async () => {
+    const pref = makePreference({
+      direct_deposit_details: { encrypted: 'enc({"accountNumber":"12345"})' },
+    });
+    const prisma = makePrisma(pref);
+    const service = new CreatorPayoutPreferenceService(
+      prisma as never,
+      mockEncryption as never,
+    );
+
+    const result = await service.getByCreatorId('creator-1');
+
+    expect(mockEncryption.decrypt).toHaveBeenCalledWith(
+      'enc({"accountNumber":"12345"})',
+    );
+    expect(result.direct_deposit_details).toEqual({ accountNumber: '12345' });
+  });
+
+  it('returns plain object fields untouched when they are not encrypted envelopes', async () => {
+    const pref = makePreference({
+      wire_details: { bank: 'plain-value' },
+    });
+    const prisma = makePrisma(pref);
+    const service = new CreatorPayoutPreferenceService(
+      prisma as never,
+      mockEncryption as never,
+    );
+
+    const result = await service.getByCreatorId('creator-1');
+
+    // Non-envelope objects are passed through without a decrypt attempt
+    expect(result.wire_details).toEqual({ bank: 'plain-value' });
+  });
+
   it('throws NotFoundException when preference does not exist', async () => {
     const prisma = makePrisma(null);
     const service = new CreatorPayoutPreferenceService(
