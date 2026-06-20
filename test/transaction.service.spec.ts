@@ -125,6 +125,16 @@ describe('TransactionService', () => {
     const ledgerService = new LedgerService();
     const service = createService(ledgerService);
 
+    // An OFFSET must reference a real prior ledger entry, so seed the origin DEBIT first.
+    const origin = ledgerService.appendEntry({
+      accountId: 'acct_offsets',
+      transactionId: 'txn_ref_1',
+      entryType: 'DEBIT',
+      amountMinor: 900n,
+      currency: 'CAD',
+      context: { ruleAppliedId: 'rule_payment_v3', auditTraceId: 'audit_origin' },
+    });
+
     service.registerChargeback(
       'txn_ref_1',
       {
@@ -137,11 +147,13 @@ describe('TransactionService', () => {
           auditTraceId: 'audit_chargeback',
         },
       },
-      'le_origin_1',
+      origin.id,
     );
 
     const entries = ledgerService.listEntriesForAccount('acct_offsets');
-    expect(entries).toHaveLength(1);
-    expect(entries[0].entryType).toBe('OFFSET');
+    expect(entries).toHaveLength(2);
+    expect(entries[1].entryType).toBe('OFFSET');
+    expect(entries[1].offsetOfEntryId).toBe(origin.id);
+    expect(ledgerService.verifyIntegrity().valid).toBe(true);
   });
 });
