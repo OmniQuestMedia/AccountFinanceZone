@@ -47,6 +47,8 @@ Full invariant spec: [`docs/standards/CANONICAL_CORPUS_v11_INVARIANTS.md`](./doc
 - Full policy reference: [`OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md`](./OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md)
 - Governance reference: [`OQMI_GOVERNANCE.md`](./OQMI_GOVERNANCE.md)
 - Standards: [`docs/standards/`](./docs/standards/)
+- Financial flow patterns: [`docs/architecture/financial-flows.md`](./docs/architecture/financial-flows.md)
+- Payments/payouts reliability & compliance review: [`docs/payments-and-payouts-review.md`](./docs/payments-and-payouts-review.md)
 - Cleanup control lane: [`PROGRAM_CONTROL/WORK-ORDER-v0.9.8.md`](./PROGRAM_CONTROL/WORK-ORDER-v0.9.8.md)
 - Ship gate verifier: [`PROGRAM_CONTROL/ship-gate-verifier.ts`](./PROGRAM_CONTROL/ship-gate-verifier.ts)
 - Webhook contract: [`WEBHOOK_CONTRACTS.md`](./WEBHOOK_CONTRACTS.md)
@@ -107,12 +109,15 @@ src/
 └── prisma/
 
 docs/
+├── architecture/
+│   └── financial-flows.md          # target-state money-movement patterns
 ├── standards/
 │   ├── CANONICAL_CORPUS_v11_INVARIANTS.md
 │   ├── MIGRATION_CHECKLIST.md
 │   └── BRANCH_HYGIENE.md
 ├── API_SURFACE.md
 ├── INTEGRATION_CONTRACT.md
+├── payments-and-payouts-review.md  # reliability & compliance review
 └── PLAYBOOKS-REFERENCE.md
 ```
 
