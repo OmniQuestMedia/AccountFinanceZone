@@ -135,7 +135,7 @@ function handle(envelope) {
 > **Naming note:** `PascalCase` types are domain lifecycle events;
 > `dotted.case` types are request/workflow events scoped to the payout-request
 > aggregate. Both share the same envelope. Match on the exact `type` string.
-
+>
 > `RefundInitiated` is **deprecated** (Canonical Corpus v11 — no cash refunds).
 > Do not build new consumers against it; consume `PromotionalCreditIssued`.
 
