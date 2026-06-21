@@ -1,8 +1,10 @@
 # Integration Contract - AccountFinanceZone
 
-> Version: 1.0
+> Version: 1.1
 > Rule applied: `GOVERNANCE-EQ-v1`
 > All financial writes are append-only. Corrections use OFFSET/reversal entries — never UPDATE or DELETE on financial data rows. Status and lifecycle fields advance forward-only via monotonic state transitions.
+> Consumer onboarding: [`INTEGRATION_GUIDE.md`](./INTEGRATION_GUIDE.md) ·
+> error contract: [`ERROR_CONTRACT.md`](./ERROR_CONTRACT.md)
 
 ---
 
@@ -243,6 +245,11 @@ Response 200:
 ---
 
 ## Events Published
+
+> Every event below is wrapped with envelope metadata (`eventId`, `eventVersion`,
+> `source`) before delivery. Consumers MUST de-duplicate on `eventId` (also sent
+> as the `x-oqmi-event-id` header). See [`INTEGRATION_GUIDE.md`](./INTEGRATION_GUIDE.md)
+> §2 for the full envelope and the consumer checklist.
 
 ### payout.requested
 

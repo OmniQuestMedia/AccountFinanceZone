@@ -42,6 +42,24 @@ Full invariant spec: [`docs/standards/CANONICAL_CORPUS_v11_INVARIANTS.md`](./doc
 - Docker
 - AWS KMS (encryption at rest)
 
+## Integrating with AccountFinanceZone
+
+If you are building a consumer service (Rewards, Marketplace, OKIB,
+OmniComplianceZone, etc.), start here:
+
+- **[`docs/INTEGRATION_GUIDE.md`](./docs/INTEGRATION_GUIDE.md)** — consumer
+  onboarding: event envelope, idempotency, headers, examples per zone.
+- [`docs/ERROR_CONTRACT.md`](./docs/ERROR_CONTRACT.md) — stable, machine-readable
+  error codes and retry semantics.
+- [`docs/API_SURFACE.md`](./docs/API_SURFACE.md) — HTTP endpoints and events.
+- [`docs/INTEGRATION_CONTRACT.md`](./docs/INTEGRATION_CONTRACT.md) — request/response bodies.
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — integration architecture and readiness scorecard.
+
+Key integration guarantees: every published event carries a stable `eventId`
+(dedupe key, also the `x-oqmi-event-id` header) and an `eventVersion`; outbound
+delivery is at-least-once; inbound events are validated; errors follow a typed
+contract. Consumer-simulation tests live in [`test/integration/`](./test/integration/).
+
 ## Governance and Security Baseline
 
 - Full policy reference: [`OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md`](./OQMI_INFRASTRUCTURE_AND_SECURITY_POLICY.md)

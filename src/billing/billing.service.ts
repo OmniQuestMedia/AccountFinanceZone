@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PayoutService } from '../payouts/payout.service';
+import {
+  IntegrationError,
+  IntegrationErrorCode,
+} from '../common/integration-error';
 
 export interface SubscriptionPlanChangeEvent {
   accountId: string;
@@ -42,6 +46,11 @@ export class BillingService {
    * Updates the revenue share percentage based on the new subscription tier.
    */
   consumeSubscriptionTierChange(event: SubscriptionPlanChangeEvent): void {
+    this.assertInboundEvent('SubscriptionPlanChangeEvent', event, [
+      'accountId',
+      'newTier',
+    ]);
+
     const newRevenueShareBps = this.getRevenueShareBpsForTier(event.newTier);
 
     // Log tier change for audit purposes
@@ -68,6 +77,12 @@ export class BillingService {
    * (e.g., when a fan subscribes to a creator's Fan Club).
    */
   linkAccountToCreator(event: AccountLinkingEvent): void {
+    this.assertInboundEvent('AccountLinkingEvent', event, [
+      'accountId',
+      'creatorAccountId',
+      'linkType',
+    ]);
+
     this.accountLinks.set(event.accountId, event.creatorAccountId);
 
     console.log(
@@ -134,5 +149,38 @@ export class BillingService {
 
   queueTaxReportingHook(_input: TaxReportingHookInput): void {
     // Integration hook for tax engine / statutory reporting pipelines.
+  }
+
+  /**
+   * Validate the shape of an inbound cross-zone event before acting on it.
+   * Rejecting malformed events early — with a typed, machine-readable error —
+   * is what makes consuming events from other repos (e.g. AccountsZone) safe.
+   */
+  private assertInboundEvent(
+    eventName: string,
+    event: unknown,
+    requiredFields: string[],
+  ): void {
+    if (!event || typeof event !== 'object') {
+      throw new IntegrationError(
+        IntegrationErrorCode.INVALID_EVENT_PAYLOAD,
+        `${eventName} payload must be a non-null object`,
+        { details: { eventName } },
+      );
+    }
+
+    const record = event as Record<string, unknown>;
+    const missing = requiredFields.filter((field) => {
+      const value = record[field];
+      return value === undefined || value === null || value === '';
+    });
+
+    if (missing.length > 0) {
+      throw new IntegrationError(
+        IntegrationErrorCode.INVALID_EVENT_PAYLOAD,
+        `${eventName} is missing required field(s): ${missing.join(', ')}`,
+        { details: { eventName, missingFields: missing } },
+      );
+    }
   }
 }

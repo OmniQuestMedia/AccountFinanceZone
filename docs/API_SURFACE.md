@@ -1,8 +1,11 @@
 # API Surface — AccountFinanceZone
 
-> Generated: 2026-05-31
+> Generated: 2026-05-31 · Envelope/error contract added: 2026-06-21
 > Rule applied: `GOVERNANCE-EQ-v1`
 > All financial writes are append-only. No UPDATE or DELETE paths exist on financial tables.
+> **New integrators start here:** [`INTEGRATION_GUIDE.md`](./INTEGRATION_GUIDE.md) ·
+> error contract: [`ERROR_CONTRACT.md`](./ERROR_CONTRACT.md) ·
+> architecture: [`ARCHITECTURE.md`](./ARCHITECTURE.md)
 
 ---
 
@@ -30,6 +33,25 @@
 ---
 
 ## NATS / Webhook Events
+
+### Event envelope (every published event)
+
+Every event carries stable, versioned, attributable envelope metadata, stamped
+centrally by `EventPublisher`. Consumers MUST de-duplicate on `eventId`.
+
+| Field          | Type   | Notes                                                    |
+| -------------- | ------ | -------------------------------------------------------- |
+| `type`         | string | Event type (see table below).                            |
+| `aggregateId`  | string | Id of the aggregate the event concerns.                  |
+| `eventId`      | string | `evt_<uuid>` — globally unique; the consumer dedupe key. |
+| `eventVersion` | string | Event schema version (currently `1.1`).                  |
+| `source`       | string | Always `AccountFinanceZone`.                             |
+| `emittedAt`    | string | ISO-8601 timestamp.                                      |
+| `payload`      | object | Type-specific fields (see table below).                  |
+
+Delivery also exposes the dedupe key as the `x-oqmi-event-id` header. Full
+transport contract: [`../WEBHOOK_CONTRACTS.md`](../WEBHOOK_CONTRACTS.md).
+Consumer guidance: [`INTEGRATION_GUIDE.md`](./INTEGRATION_GUIDE.md).
 
 ### Published by AccountFinanceZone
 
