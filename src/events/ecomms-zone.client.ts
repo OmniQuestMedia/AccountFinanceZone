@@ -1,12 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createHmac } from 'crypto';
-import { FinanceEvent } from './event.types';
+import { enrichFinanceEvent, FinanceEvent } from './event.types';
 
 interface ECommsZoneEnvelope {
   contractVersion: '1.1';
   destination: 'eCommsZone';
   source: 'AccountFinanceZone';
   ruleAppliedId: 'GOVERNANCE-EQ-v1';
+  /**
+   * Stable per-event identifier, lifted to the envelope top-level so consumers
+   * can de-duplicate without unpacking the inner event payload.
+   */
+  eventId: string;
   event: FinanceEvent;
   deliveredAt: string;
 }
@@ -22,12 +27,17 @@ export class ECommsZoneClient {
       return;
     }
 
+    // Defensive: ensure the event carries envelope metadata even when callers
+    // reach this client directly (the EventPublisher enriches too).
+    const enriched = enrichFinanceEvent(event);
+
     const envelope: ECommsZoneEnvelope = {
       contractVersion: '1.1',
       destination: 'eCommsZone',
       source: 'AccountFinanceZone',
       ruleAppliedId: 'GOVERNANCE-EQ-v1',
-      event,
+      eventId: enriched.eventId as string,
+      event: enriched,
       deliveredAt: new Date().toISOString(),
     };
 
@@ -37,6 +47,7 @@ export class ECommsZoneClient {
       'x-oqmi-contract-version': '1.1',
       'x-oqmi-rule-applied-id': 'GOVERNANCE-EQ-v1',
       'x-oqmi-source-system': 'AccountFinanceZone',
+      'x-oqmi-event-id': enriched.eventId as string,
     };
 
     const sharedSecret = process.env.ECOMMSZONE_WEBHOOK_SECRET?.trim();
