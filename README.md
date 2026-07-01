@@ -28,7 +28,6 @@ Full invariant spec: [`docs/standards/CANONICAL_CORPUS_v11_INVARIANTS.md`](./doc
 
 - [ ] Enable branch protection on `main` (GitHub UI → Settings → Branches → Add rule)
 - [ ] Delete 15 stale branches (see [`docs/standards/BRANCH_HYGIENE.md`](./docs/standards/BRANCH_HYGIENE.md))
-- [ ] Audit `services/stripe/` for deprecated API versions or hardcoded keys
 - [ ] Verify escrow hold matrix and chargeback assembler in `src/fraud/` / `src/compliance/`
 
 ---

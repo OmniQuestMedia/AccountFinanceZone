@@ -28,7 +28,6 @@
 ## STEP 3: Dependency & Hook Check
 
 - [x] `package.json` reviewed — NestJS + Prisma, no deprecated payment SDKs in root
-- [ ] Audit `services/stripe/` for hardcoded keys or deprecated API versions
 - [ ] Verify all balance mutations in `src/ledger/` use INSERT-only pattern
 - [ ] Verify `src/billing/`, `src/payouts/`, `src/transactions/` enforce bucket spend order
 - [ ] Verify chargeback package assembler exists in `src/fraud/` or `src/compliance/`
