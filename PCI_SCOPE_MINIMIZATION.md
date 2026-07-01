@@ -215,12 +215,29 @@ By **never receiving or storing** this data, we:
 - **Encrypted Fields:**
   - `PaymentMethodToken.providerToken`
   - `PaymentMethodToken.tokenFingerprint`
+  - `CreatorPayoutPreference.direct_deposit_details` (JSON envelope)
+  - `CreatorPayoutPreference.wire_details` (JSON envelope)
+  - `CreatorPayoutPreference.mailing_address` (JSON envelope)
+  - `CreatorPayoutPreference.etransfer_email` (scalar ciphertext) — **A14**
+  - `CreatorPayoutPreference.crypto_wallet_address` (scalar ciphertext) — **A14**
 
 **Example:**
 ```typescript
 // Encrypted storage format: iv:authTag:encryptedData (base64)
 providerToken: "Ax7k...==:Bk2m...==:Cn3p...=="
 ```
+
+#### Payout-destination PII (ARCHITECTURE_CANON_ADDENDUM_A §A14, Kevin ruling 2026-07-01)
+
+Payout destinations **stay in Finance** (in-scope: Finance must disburse funds)
+and are **encrypted at rest** with the same AES-256-GCM path. This closes the
+prior asymmetry where `etransfer_email` and `crypto_wallet_address` were stored
+in plaintext while the JSON payout blobs were encrypted. Both scalar fields are
+now encrypted on write and decrypted on read, with the read path tolerating
+legacy plaintext rows until the (gated) backfill runs. The two columns were
+widened from `VarChar(200)` to `Text` because AES-256-GCM ciphertext of a
+max-length input exceeds 200 characters. These fields are payout-routing PII,
+**not** cardholder data (PAN/CVV) — no card data is introduced.
 
 **Key Rotation:** Master keys must be rotated per PCI-DSS requirements (annually or when compromised).
 
