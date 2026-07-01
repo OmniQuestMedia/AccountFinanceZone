@@ -4,6 +4,9 @@
   "description": "Finance bounded context for OmniQuest Media Inc.",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "ci": "npm run lint && npm test && npm run build",
