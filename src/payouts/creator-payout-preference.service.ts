@@ -41,6 +41,17 @@ export class CreatorPayoutPreferenceService {
       ? this.encryption.encrypt(JSON.stringify(input.mailingAddress))
       : null;
 
+    // Scalar payout-destination PII (A14): encrypt at rest with the same
+    // AES-256-GCM path used for the JSON blobs above. Stored as the raw
+    // ciphertext string (iv:authTag:data), not a JSON envelope.
+    const etransferEmailEncrypted = input.etransferEmail
+      ? this.encryption.encrypt(input.etransferEmail)
+      : null;
+
+    const cryptoWalletEncrypted = input.cryptoWalletAddress
+      ? this.encryption.encrypt(input.cryptoWalletAddress)
+      : null;
+
     const existing = await this.prisma.creatorPayoutPreference.findUnique({
       where: { creator_id: input.creatorId },
     });
@@ -55,9 +66,9 @@ export class CreatorPayoutPreferenceService {
         direct_deposit_details: directDepositEncrypted
           ? { encrypted: directDepositEncrypted }
           : undefined,
-        etransfer_email: input.etransferEmail ?? null,
+        etransfer_email: etransferEmailEncrypted,
         wire_details: wireEncrypted ? { encrypted: wireEncrypted } : undefined,
-        crypto_wallet_address: input.cryptoWalletAddress ?? null,
+        crypto_wallet_address: cryptoWalletEncrypted,
         mailing_address: mailingEncrypted
           ? { encrypted: mailingEncrypted }
           : undefined,
@@ -69,9 +80,9 @@ export class CreatorPayoutPreferenceService {
         direct_deposit_details: directDepositEncrypted
           ? { encrypted: directDepositEncrypted }
           : Prisma.JsonNull,
-        etransfer_email: input.etransferEmail ?? null,
+        etransfer_email: etransferEmailEncrypted,
         wire_details: wireEncrypted ? { encrypted: wireEncrypted } : Prisma.JsonNull,
-        crypto_wallet_address: input.cryptoWalletAddress ?? null,
+        crypto_wallet_address: cryptoWalletEncrypted,
         mailing_address: mailingEncrypted
           ? { encrypted: mailingEncrypted }
           : Prisma.JsonNull,
@@ -118,6 +129,22 @@ export class CreatorPayoutPreferenceService {
       direct_deposit_details: decryptJson(pref.direct_deposit_details),
       wire_details: decryptJson(pref.wire_details),
       mailing_address: decryptJson(pref.mailing_address),
+      etransfer_email: this.decryptScalar(pref.etransfer_email),
+      crypto_wallet_address: this.decryptScalar(pref.crypto_wallet_address),
     };
+  }
+
+  /**
+   * Decrypts a scalar PII string encrypted with the AES-256-GCM path.
+   * Tolerates legacy plaintext rows (pre-A14 backfill): if the value is not
+   * valid ciphertext, decrypt() throws and we fall back to the raw value.
+   */
+  private decryptScalar(val: string | null): string | null {
+    if (val === null || val === undefined) return null;
+    try {
+      return this.encryption.decrypt(val);
+    } catch {
+      return val;
+    }
   }
 }
